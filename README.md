@@ -113,10 +113,11 @@ lyra-profile ~/Work/my-pytorch-project scripts/train_model.py
 ```
 
 This safely profiles your training pipeline by:
-1. **Safe Mode Operation** - Disables model saving, prevents data modification, limits to 100 steps
-2. **Advanced Profiling** - Adds PyTorch Lightning AdvancedProfiler for detailed timing analysis
-3. **Automated Execution** - Runs modified training code and generates profiler reports
-4. **Clean Restoration** - Restores all temporarily modified files
+1. **Environment Setup** - Creates isolated environment and installs dependencies automatically
+2. **Safe Mode Operation** - Disables model saving, prevents data modification, limits to 100 steps
+3. **Advanced Profiling** - Adds PyTorch Lightning AdvancedProfiler for detailed timing analysis
+4. **Automated Execution** - Runs modified training code and generates profiler reports
+5. **Clean Restoration** - Restores all temporarily modified files and cleans up environments
 
 The generated profiler report can then be analyzed using `lyra-analyze` for bottleneck identification.
 

@@ -48,36 +48,51 @@ $(if [ -n "$TRAINING_SCRIPT" ]; then echo "🎯 **Target Training Script**: $TRA
 
 I need to modify the training pipeline to run in safe mode with comprehensive profiling:
 
-🎵 **Phase I: Safe Mode Transformation** 🎵
+🎵 **Phase I: Environment Setup** 🎵
+Prepare the celestial environment for safe profiling:
+   ⭐ Detect environment configuration files (requirements.txt, environment.yml, pyproject.toml, etc.)
+   ⭐ Create isolated profiling environment (conda/venv) with unique name like 'lyra-profile-[timestamp]'
+   ⭐ Install all dependencies from repository's configuration files
+   ⭐ Verify environment setup and required packages are available
+   ⭐ Handle different package managers (pip, conda, poetry, pipenv)
+
+🎶 **Phase II: Safe Mode Transformation** 🎶
 Transform the training code to prevent any permanent changes:
-   ⭐ Disable all model saving and checkpointing
-   ⭐ Prevent any permanent data rewriting or modification
-   ⭐ Add backup/restore mechanisms for any temporary changes
-   ⭐ Limit training loop to exactly 100 steps maximum
-   ⭐ Add early stopping after profiling is complete
+   🌟 Disable all model saving and checkpointing
+   🌟 Prevent any permanent data rewriting or modification
+   🌟 Add backup/restore mechanisms for any temporary changes
+   🌟 Limit training loop to exactly 100 steps maximum
+   🌟 Add early stopping after profiling is complete
 
-🎶 **Phase II: Advanced Profiler Integration** 🎶
+🎭 **Phase III: Advanced Profiler Integration** 🎭
 Add comprehensive PyTorch Lightning profiling capabilities:
-   🌟 Integrate PyTorch Lightning's AdvancedProfiler
-   🌟 Configure profiler to capture detailed timing information
-   🌟 Set up profiler output to generate detailed reports
-   🌟 Add memory profiling and GPU utilization tracking
-   🌟 Configure profiler for training pipeline bottleneck analysis
+   ✨ Integrate PyTorch Lightning's AdvancedProfiler
+   ✨ Configure profiler to capture detailed timing information
+   ✨ Set up profiler output to generate detailed reports
+   ✨ Add memory profiling and GPU utilization tracking
+   ✨ Configure profiler for training pipeline bottleneck analysis
 
-🎭 **Phase III: Profiling Execution** 🎭
-Execute the safe profiling run:
-   ✨ Run the modified training code with profiler enabled
-   ✨ Generate comprehensive profiler reports
-   ✨ Capture timing data for all training components
-   ✨ Save profiler output to lyra_profiler_report.txt
-   ✨ Restore any temporarily modified files
+🌌 **Phase IV: Profiling Execution** 🌌
+Execute the safe profiling run in the prepared environment:
+   🎼 Activate the isolated profiling environment
+   🎼 Run the modified training code with profiler enabled
+   🎼 Generate comprehensive profiler reports
+   🎼 Capture timing data for all training components
+   🎼 Save profiler output to lyra_profiler_report.txt
+
+🎯 **Phase V: Cleanup and Restoration** 🎯
+Clean up after profiling completion:
+   🎵 Restore any temporarily modified files
+   🎵 Deactivate and optionally remove the profiling environment
+   🎵 Provide summary of profiling results and next steps
 
 🎯 **Implementation Requirements:** 🎯
-1. **Safety First**: Never permanently modify user's code or data
-2. **Comprehensive**: Profile all major training components
-3. **Automated**: Minimal user intervention required  
-4. **Detailed**: Generate actionable profiler output
-5. **Restorative**: Clean up all temporary modifications
+1. **Environment Isolation**: Create isolated environment to avoid conflicts with user's setup
+2. **Safety First**: Never permanently modify user's code or data
+3. **Comprehensive**: Profile all major training components
+4. **Automated**: Handle environment setup and dependency installation automatically
+5. **Detailed**: Generate actionable profiler output
+6. **Restorative**: Clean up all temporary modifications and environments
 
 🌌 **Search Strategy:** 🌌
 $(if [ -n "$TRAINING_SCRIPT" ]; then 
@@ -111,13 +126,25 @@ Generate a detailed profiler report that lyra-analyze can process to identify:
    🌟 Model computation hotspots
    🌟 Optimization opportunities
 
-🎭 Execute this safe profiling transformation and run the training with comprehensive profiling enabled. Let the performance symphony begin! 🎼✨
+🎼 **Environment Setup Strategy:** 🎼
+Handle common environment configurations:
+   🎶 requirements.txt → pip install -r requirements.txt
+   🎶 environment.yml/environment.yaml → conda env create -f environment.yml
+   🎶 pyproject.toml → poetry install or pip install -e .
+   🎶 Pipfile → pipenv install
+   🎶 setup.py → pip install -e .
+   🎶 Docker configurations → Analyze Dockerfile for dependencies
+   🎶 README instructions → Parse installation commands
+
+🎭 Execute this complete safe profiling workflow with environment setup and run the training with comprehensive profiling enabled. Let the performance symphony begin! 🎼✨
 
 After profiling is complete, provide:
+🎵 Details of environment created and packages installed
 🎵 Path to generated profiler report
 🎵 Summary of what was profiled
 🎵 Any temporary modifications made and restored
-🎵 Instructions for using lyra-analyze with the generated report"
+🎵 Instructions for using lyra-analyze with the generated report
+🎵 Environment cleanup status and instructions"
 
 # Run Claude Code with the prompt
 cd "$REPO_PATH" && claude --message "$PROMPT"
