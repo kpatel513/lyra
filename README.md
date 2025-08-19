@@ -17,10 +17,10 @@ Lyra is an AI Agent that automatically analyzes and optimizes ML training code b
    # or download the lyra directory to your desired location
    ```
 
-2. **Make the script executable**
+2. **Make the scripts executable**
    ```bash
    cd lyra
-   chmod +x lyra-summarize
+   chmod +x lyra-summarize lyra-profile
    ```
 
 3. **Add Lyra to your PATH (optional)**
@@ -48,17 +48,24 @@ Test that Lyra is working correctly:
 ```bash
 # If added to PATH:
 lyra-summarize
+lyra-profile
 
-# Or use the full path:
+# Or use the full paths:
 /path/to/lyra/lyra-summarize
+/path/to/lyra/lyra-profile
 ```
 
-You should see the usage message:
+You should see usage messages:
 ```
 Usage: lyra-summarize REPO_PATH
+Usage: lyra-profile REPO_PATH
 ```
 
 ## Usage
+
+Lyra provides two main analysis commands:
+
+### Repository Analysis (lyra-summarize)
 
 Analyze any ML repository for mixed precision training and sharding implementations:
 
@@ -66,18 +73,35 @@ Analyze any ML repository for mixed precision training and sharding implementati
 lyra-summarize /path/to/your/ml/repository
 ```
 
-### Example
-
+**Example:**
 ```bash
 lyra-summarize ~/Work/my-pytorch-project
 ```
 
-This will analyze the repository and generate a comprehensive report covering:
-
+This generates a comprehensive report covering:
 1. **Mixed Precision Training** - Detection of AMP, FP16/BF16 usage, GradScaler, etc.
 2. **Sharding** - Analysis of distributed training, model parallelism, tensor sharding strategies
 
-The analysis is powered by Claude Code and provides detailed file locations, code snippets, and implementation details for all findings.
+### Performance Profiling Analysis (lyra-profile)
+
+Analyze training pipelines for performance bottlenecks and profiling opportunities:
+
+```bash
+lyra-profile /path/to/your/ml/repository
+```
+
+**Example:**
+```bash
+lyra-profile ~/Work/my-pytorch-project
+```
+
+This generates a profiling analysis report covering:
+1. **Existing Profiling Setup** - Current profiler configurations and performance monitoring
+2. **Training Pipeline Analysis** - Components that could benefit from profiling
+3. **Performance Bottleneck Indicators** - Potential performance issues in the code
+4. **Profiling Recommendations** - Specific strategies to optimize training performance
+
+Both analyses are powered by Claude Code and provide detailed file locations, code snippets, and implementation details.
 
 ## Requirements
 
@@ -87,9 +111,9 @@ The analysis is powered by Claude Code and provides detailed file locations, cod
 ## Troubleshooting
 
 **Command not found:**
-- Ensure the script is executable: `chmod +x lyra-summarize`
+- Ensure the scripts are executable: `chmod +x lyra-summarize lyra-profile`
 - Check that the path is correct when added to PATH
-- Try using the full path to the script
+- Try using the full path to the scripts
 
 **Claude Code errors:**
 - Ensure Claude Code is properly installed and authenticated

@@ -1,0 +1,63 @@
+#!/bin/bash
+
+# Lyra Profiling Analysis Script
+# Usage: lyra-profile REPO_PATH
+
+if [ $# -eq 0 ]; then
+    echo "Usage: lyra-profile REPO_PATH"
+    exit 1
+fi
+
+REPO_PATH="$1"
+
+if [ ! -d "$REPO_PATH" ]; then
+    echo "Error: Directory $REPO_PATH does not exist"
+    exit 1
+fi
+
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Template prompt for Claude Code
+PROMPT="Please analyze the repository at $REPO_PATH for training performance and profiling opportunities. Use the profiler_analyzer.py script at $SCRIPT_DIR/profiler_analyzer.py to help with analysis.
+
+Search the codebase for:
+
+1. **Existing Profiling Setup**: Look for profiler configurations, timing code, or performance monitoring
+   - PyTorch Lightning Profiler configurations
+   - Custom timing/profiling decorators
+   - Performance logging statements
+   - Profiler report files (*.prof, *.trace, etc.)
+
+2. **Training Pipeline Analysis**: Identify components that could benefit from profiling
+   - DataLoader and data preprocessing steps
+   - Model forward/backward passes
+   - Optimizer steps and gradient computations
+   - Callback functions and hooks
+   - I/O operations and checkpointing
+
+3. **Performance Bottleneck Indicators**: Look for potential performance issues
+   - Large dataset loading without optimization
+   - Complex data transformations
+   - Inefficient model architectures
+   - Memory-intensive operations
+   - Synchronous I/O operations
+
+4. **Profiling Recommendations**: Suggest specific profiling strategies
+   - Where to add PyTorch Lightning profiler
+   - Which components need detailed timing analysis
+   - Memory profiling opportunities
+   - GPU utilization monitoring points
+
+For each finding, please provide:
+- File locations with line numbers
+- Code snippets showing current implementation
+- Specific profiling recommendations
+- Expected bottlenecks to investigate
+
+If you find existing profiler reports in the repository, use the profiler_analyzer.py script to analyze them and provide bottleneck analysis.
+
+Generate a comprehensive profiling analysis report with actionable recommendations for optimizing the training pipeline."
+
+# Run Claude Code with the prompt
+cd "$REPO_PATH" && claude --message "$PROMPT"
