@@ -1,14 +1,24 @@
 #!/bin/bash
 
 # Lyra Repository Analysis Script
-# Usage: lyra-summarize REPO_PATH
+# Usage: lyra-summarize REPO_PATH [TRAINING_SCRIPT]
 
 if [ $# -eq 0 ]; then
-    echo "Usage: lyra-summarize REPO_PATH"
+    echo "Usage: lyra-summarize REPO_PATH [TRAINING_SCRIPT]"
+    echo ""
+    echo "Arguments:"
+    echo "  REPO_PATH        Path to the ML repository"
+    echo "  TRAINING_SCRIPT  Optional: Specific training script to analyze (e.g., train.py, src/fine_tune.py)"
+    echo ""
+    echo "Examples:"
+    echo "  lyra-summarize ~/my-project                           # Analyze entire repository"
+    echo "  lyra-summarize ~/my-project train.py                 # Focus on specific script"
+    echo "  lyra-summarize ~/my-project src/models/fine_tune.py  # Focus on script in subdirectory"
     exit 1
 fi
 
 REPO_PATH="$1"
+TRAINING_SCRIPT="${2:-}"
 
 # Validate repository path
 if [ ! -d "$REPO_PATH" ]; then
@@ -21,6 +31,15 @@ if [ ! -r "$REPO_PATH" ]; then
     exit 1
 fi
 
+# If training script is specified, validate it exists
+if [ -n "$TRAINING_SCRIPT" ]; then
+    FULL_SCRIPT_PATH="$REPO_PATH/$TRAINING_SCRIPT"
+    if [ ! -f "$FULL_SCRIPT_PATH" ]; then
+        echo "❌ Error: Training script $TRAINING_SCRIPT does not exist in $REPO_PATH"
+        exit 1
+    fi
+fi
+
 # Convert to absolute path
 REPO_PATH="$(cd "$REPO_PATH" && pwd)"
 
@@ -29,6 +48,11 @@ REPO_PATH="$(cd "$REPO_PATH" && pwd)"
 # Display progress information
 echo "🎼 Lyra Repository Analysis Starting..."
 echo "📂 Repository: $REPO_PATH"
+if [ -n "$TRAINING_SCRIPT" ]; then
+    echo "🎯 Target Script: $TRAINING_SCRIPT"
+else
+    echo "🔍 Mode: Full repository analysis"
+fi
 echo ""
 echo "🎵 Initializing Lyra's harmonic analysis..."
 echo "⭐ Searching for mixed precision training implementations..."
@@ -41,15 +65,29 @@ echo ""
 
 # Run Claude Code with the prompt using a temporary file to avoid shell escaping issues
 TEMP_PROMPT_FILE=$(mktemp)
+
+# Add dynamic content based on training script parameter
+if [ -n "$TRAINING_SCRIPT" ]; then
+    TARGET_INFO="🎯 **Target Training Script**: $TRAINING_SCRIPT"
+    FOCUS_AREAS="🎼 **Analysis Scope**: Focus primarily on the specified training script: $TRAINING_SCRIPT 
+
+⚠️  **CRITICAL**: Analyze the TARGET SCRIPT ($TRAINING_SCRIPT) specifically for mixed precision and sharding usage. Do NOT assume the entire repository uses these features if the target script does not. Base conclusions on what is actually implemented in the specified file and its direct imports/dependencies.
+
+If the target script uses FP32/float32 without mixed precision configurations, the answer for mixed precision should be NO, regardless of what other files in the repository might contain."
+else
+    TARGET_INFO="🔍 **Full Repository Mode**: Analyzing all training components"
+    FOCUS_AREAS=""
+fi
+
 cat > "$TEMP_PROMPT_FILE" << 'EOF'
 🎵 Welcome to Lyra - Your AI-powered repository harmonizer! 🎵
 
 Like Orpheus with his lyre, I shall weave through your codebase to create a melodious analysis ✨
 
 🎼 **Analysis Symphony - Movement I: Mixed Precision Training** 🎼
-Search the constellation of code for evidence of mixed precision training usage, including:
+Search for evidence of mixed precision training usage, including:
    ⭐ Automatic Mixed Precision (AMP) implementations
-   ⭐ FP16/BF16 data types
+   ⭐ FP16/BF16 data types usage
    ⭐ GradScaler usage
    ⭐ Mixed precision configuration files
    ⭐ Training scripts with precision settings
@@ -68,8 +106,30 @@ Discover the harmonic patterns of distributed training and model/data sharding:
 🎵 Configuration details if available
 🎵 Framework/library used (PyTorch, TensorFlow, JAX, etc.)
 
-🎭 Generate a harmonious report with clear YES/NO answers for both categories, followed by supporting evidence and implementation details. Let the music of code analysis begin! 🎼✨
+🎭 **REQUIRED OUTPUT FORMAT**:
+
+## Mixed Precision Training: [YES/NO]
+[Detailed analysis with specific evidence]
+- File locations and line numbers where found (or state "NOT FOUND")
+- Code snippets showing implementation (or explain what was found instead)
+- Specific precision types detected (FP32, FP16, BF16, etc.)
+
+## Sharding/Distribution: [YES/NO] 
+[Detailed analysis with specific evidence]
+- File locations and line numbers where found (or state "NOT FOUND")
+- Code snippets showing implementation (or explain what was found instead)
+- Specific frameworks/strategies detected
+
+**CRITICAL**: Base conclusions ONLY on actual code evidence. If you find FP32/float32 usage without mixed precision setup, clearly state "Mixed Precision Training: NO" and explain what precision is actually being used. Be thorough and precise - this analysis guides optimization decisions! 🎼✨
 EOF
+
+# Add the dynamic content to the prompt file
+echo "" >> "$TEMP_PROMPT_FILE"
+echo "$TARGET_INFO" >> "$TEMP_PROMPT_FILE"
+if [ -n "$FOCUS_AREAS" ]; then
+    echo "" >> "$TEMP_PROMPT_FILE"
+    echo "$FOCUS_AREAS" >> "$TEMP_PROMPT_FILE"
+fi
 
 if cd "$REPO_PATH" && claude --print "$(cat "$TEMP_PROMPT_FILE")"; then
     rm -f "$TEMP_PROMPT_FILE"
