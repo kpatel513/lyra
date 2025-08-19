@@ -42,7 +42,7 @@ PROMPT="🎼 Lyra's Safe Mode Profiler - Orpheus's Training Harmonizer 🎼
 
 Like Orpheus carefully tuning his lyre before the performance, I shall prepare your training code at $REPO_PATH for safe profiling! 🎭✨
 
-$(if [ -n "$TRAINING_SCRIPT" ]; then echo "🎯 **Target Training Script**: $TRAINING_SCRIPT"; else echo "🔍 **Auto-Detection Mode**: I will search for and identify the main training script"; fi)
+$(if [ -n "$TRAINING_SCRIPT" ]; then echo "🎼 **Target Training Script**: $TRAINING_SCRIPT"; else echo "🔍 **Auto-Detection Mode**: I will search for and identify the main training script"; fi)
 
 🌟 **Mission: Transform Training Code into Safe Profiling Mode** 🌟
 
@@ -80,13 +80,13 @@ Execute the safe profiling run in the prepared environment:
    🎼 Capture timing data for all training components
    🎼 Save profiler output to lyra_profiler_report.txt
 
-🎯 **Phase V: Cleanup and Restoration** 🎯
+🌟 **Phase V: Cleanup and Restoration** 🌟
 Clean up after profiling completion:
    🎵 Restore any temporarily modified files
    🎵 Deactivate and optionally remove the profiling environment
    🎵 Provide summary of profiling results and next steps
 
-🎯 **Implementation Requirements:** 🎯
+🎭 **Implementation Requirements:** 🎭
 1. **Environment Isolation**: Create isolated environment to avoid conflicts with user's setup
 2. **Safety First**: Never permanently modify user's code or data
 3. **Comprehensive**: Profile all major training components
@@ -97,9 +97,9 @@ Clean up after profiling completion:
 🌌 **Search Strategy:** 🌌
 $(if [ -n "$TRAINING_SCRIPT" ]; then 
     echo "Focus on the specified training script: $TRAINING_SCRIPT"
-    echo "   🎯 Analyze and modify the target script: $TRAINING_SCRIPT"
-    echo "   🎯 Identify dependencies and imports used by this script"
-    echo "   🎯 Configure profiler specifically for this training pipeline"
+    echo "   🎼 Analyze and modify the target script: $TRAINING_SCRIPT"
+    echo "   🎼 Identify dependencies and imports used by this script"
+    echo "   🎼 Configure profiler specifically for this training pipeline"
 else
     echo "Auto-detect training entry points:"
     echo "   🎵 main training scripts (train.py, main.py, run.py)"

@@ -48,7 +48,7 @@ Look for discordant notes in the performance symphony:
    ✨ Memory-intensive operations
    ✨ Synchronous I/O operations
 
-🎯 **Constellation IV: Profiling Recommendations** 🎯
+🎼 **Constellation IV: Profiling Recommendations** 🎼
 Suggest specific harmonization strategies:
    🎼 Where to add PyTorch Lightning profiler
    🎼 Which components need detailed timing analysis
