@@ -10,15 +10,41 @@ fi
 
 REPO_PATH="$1"
 
+# Validate repository path
 if [ ! -d "$REPO_PATH" ]; then
-    echo "Error: Directory $REPO_PATH does not exist"
+    echo "❌ Error: Directory $REPO_PATH does not exist"
     exit 1
 fi
 
-# Template prompt for Claude Code
-PROMPT="🎵 Welcome to Lyra - Your AI-powered repository harmonizer! 🎵
+if [ ! -r "$REPO_PATH" ]; then
+    echo "❌ Error: Directory $REPO_PATH is not readable"
+    exit 1
+fi
 
-Like Orpheus with his lyre, I shall weave through your codebase to create a melodious analysis of $REPO_PATH ✨
+# Convert to absolute path
+REPO_PATH="$(cd "$REPO_PATH" && pwd)"
+
+# Lyra will use a temporary file for the prompt to avoid shell escaping issues
+
+# Display progress information
+echo "🎼 Lyra Repository Analysis Starting..."
+echo "📂 Repository: $REPO_PATH"
+echo ""
+echo "🎵 Initializing Lyra's harmonic analysis..."
+echo "⭐ Searching for mixed precision training implementations..."
+echo "🌟 Analyzing distributed training and sharding patterns..."
+echo "🎶 Weaving together the musical threads of your codebase..."
+echo ""
+echo "🎭 Please wait while Orpheus performs his code analysis symphony..."
+echo "   This may take 1-3 minutes depending on repository size..."
+echo ""
+
+# Run Claude Code with the prompt using a temporary file to avoid shell escaping issues
+TEMP_PROMPT_FILE=$(mktemp)
+cat > "$TEMP_PROMPT_FILE" << 'EOF'
+🎵 Welcome to Lyra - Your AI-powered repository harmonizer! 🎵
+
+Like Orpheus with his lyre, I shall weave through your codebase to create a melodious analysis ✨
 
 🎼 **Analysis Symphony - Movement I: Mixed Precision Training** 🎼
 Search the constellation of code for evidence of mixed precision training usage, including:
@@ -42,7 +68,27 @@ Discover the harmonic patterns of distributed training and model/data sharding:
 🎵 Configuration details if available
 🎵 Framework/library used (PyTorch, TensorFlow, JAX, etc.)
 
-🎭 Generate a harmonious report with clear YES/NO answers for both categories, followed by supporting evidence and implementation details. Let the music of code analysis begin! 🎼✨"
+🎭 Generate a harmonious report with clear YES/NO answers for both categories, followed by supporting evidence and implementation details. Let the music of code analysis begin! 🎼✨
+EOF
 
-# Run Claude Code with the prompt
-cd "$REPO_PATH" && claude --print "$PROMPT"
+if cd "$REPO_PATH" && claude --print "$(cat "$TEMP_PROMPT_FILE")"; then
+    rm -f "$TEMP_PROMPT_FILE"
+    # Display completion message
+    echo ""
+    echo "🎼✨ Analysis complete! The harmonious report has been generated above."
+else
+    rm -f "$TEMP_PROMPT_FILE"
+    echo ""
+    echo "❌ Error: Claude Code analysis failed. This could be due to:"
+    echo "   • Claude Code authentication issues"
+    echo "   • Network connectivity problems"
+    echo "   • Repository size or complexity"
+    echo "   • Insufficient permissions"
+    echo ""
+    echo "🔧 Troubleshooting suggestions:"
+    echo "   1. Check Claude Code authentication: claude config"
+    echo "   2. Try with a smaller test repository"
+    echo "   3. Ensure stable internet connection"
+    echo "   4. Check repository permissions"
+    exit 1
+fi

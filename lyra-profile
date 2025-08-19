@@ -146,5 +146,29 @@ After profiling is complete, provide:
 🎵 Instructions for using lyra-analyze with the generated report
 🎵 Environment cleanup status and instructions"
 
+# Display progress information
+echo "🎼 Lyra Safe Mode Profiler Starting..."
+echo "📂 Repository: $REPO_PATH"
+if [ -n "$TRAINING_SCRIPT" ]; then
+    echo "🎯 Target Script: $TRAINING_SCRIPT"
+else
+    echo "🔍 Mode: Auto-detection"
+fi
+echo ""
+echo "🎵 Phase I: Preparing celestial environment..."
+echo "🎶 Phase II: Transforming code into safe mode..."
+echo "🎭 Phase III: Integrating advanced profiler..."
+echo "🌌 Phase IV: Executing profiling symphony..."
+echo "🌟 Phase V: Harmonious cleanup and restoration..."
+echo ""
+echo "🎭 Orpheus carefully tunes his lyre for the performance ahead..."
+echo "   This orchestration may take 3-10 minutes depending on training complexity..."
+echo "   Environment setup, profiling execution, and cleanup will be performed safely."
+echo ""
+
 # Run Claude Code with the prompt
 cd "$REPO_PATH" && claude --print "$PROMPT"
+
+# Display completion message
+echo ""
+echo "🎼✨ Safe profiling symphony complete! Your performance insights have been harmoniously generated."

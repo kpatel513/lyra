@@ -18,12 +18,27 @@ fi
 # Get the directory where this script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Template prompt for Claude Code
-PROMPT="🎼 Lyra's Performance Symphony Analyzer 🎼
+# Lyra will use a temporary file for the prompt to avoid shell escaping issues
 
-Like Orpheus descending into the underworld to retrieve Eurydice, I shall dive deep into the performance depths of your training pipeline at $REPO_PATH to bring back insights! 🎭⚡
+# Display progress information
+echo "🎼 Lyra Performance Analysis Starting..."
+echo "📂 Repository: $REPO_PATH"
+echo ""
+echo "🌟 Constellation I: Scanning for existing profiling configurations..."
+echo "⭐ Constellation II: Mapping training pipeline components..."
+echo "🌌 Constellation III: Detecting performance bottleneck indicators..."
+echo "🎼 Constellation IV: Composing profiling recommendations..."
+echo ""
+echo "🎭 Orpheus descends into the performance depths of your training pipeline..."
+echo "   This journey may take 1-3 minutes depending on code complexity..."
+echo ""
 
-Use the profiler_analyzer.py script at $SCRIPT_DIR/profiler_analyzer.py as your mystical lyre to help with analysis.
+# Run Claude Code with the prompt using a temporary file to avoid shell escaping issues
+TEMP_PROMPT_FILE=$(mktemp)
+cat > "$TEMP_PROMPT_FILE" << 'EOF'
+🎼 Lyra's Performance Symphony Analyzer 🎼
+
+Like Orpheus descending into the underworld to retrieve Eurydice, I shall dive deep into the performance depths of your training pipeline to bring back insights! 🎭⚡
 
 🌟 **Constellation I: Existing Profiling Setup** 🌟
 Search through the starlit code for profiler configurations, timing melodies, or performance monitoring:
@@ -61,9 +76,27 @@ Suggest specific harmonization strategies:
 🎵 Specific profiling recommendations
 🎵 Expected bottlenecks to investigate
 
-🌟 If you find existing profiler reports in the repository, use the profiler_analyzer.py script like Orpheus's lyre to analyze them and provide bottleneck analysis.
+🎶 Generate a comprehensive performance symphony report with actionable recommendations for optimizing the training pipeline. Let the music of optimization begin! 🎼✨
+EOF
 
-🎶 Generate a comprehensive performance symphony report with actionable recommendations for optimizing the training pipeline. Let the music of optimization begin! 🎼✨"
-
-# Run Claude Code with the prompt
-cd "$REPO_PATH" && claude --print "$PROMPT"
+if cd "$REPO_PATH" && claude --print "$(cat "$TEMP_PROMPT_FILE")"; then
+    rm -f "$TEMP_PROMPT_FILE"
+    # Display completion message
+    echo ""
+    echo "🎶✨ Performance symphony analysis complete! Your optimization harmonies await above."
+else
+    rm -f "$TEMP_PROMPT_FILE"
+    echo ""
+    echo "❌ Error: Claude Code analysis failed. This could be due to:"
+    echo "   • Claude Code authentication issues"
+    echo "   • Network connectivity problems"
+    echo "   • Repository size or complexity"
+    echo "   • Insufficient permissions"
+    echo ""
+    echo "🔧 Troubleshooting suggestions:"
+    echo "   1. Check Claude Code authentication: claude config"
+    echo "   2. Try with a smaller test repository"  
+    echo "   3. Ensure stable internet connection"
+    echo "   4. Check repository permissions"
+    exit 1
+fi
