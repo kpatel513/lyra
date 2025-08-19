@@ -147,4 +147,4 @@ After profiling is complete, provide:
 🎵 Environment cleanup status and instructions"
 
 # Run Claude Code with the prompt
-cd "$REPO_PATH" && claude --message "$PROMPT"
+cd "$REPO_PATH" && claude --print "$PROMPT"

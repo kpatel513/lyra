@@ -66,4 +66,4 @@ Suggest specific harmonization strategies:
 🎶 Generate a comprehensive performance symphony report with actionable recommendations for optimizing the training pipeline. Let the music of optimization begin! 🎼✨"
 
 # Run Claude Code with the prompt
-cd "$REPO_PATH" && claude --message "$PROMPT"
+cd "$REPO_PATH" && claude --print "$PROMPT"

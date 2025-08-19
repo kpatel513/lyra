@@ -45,4 +45,4 @@ Discover the harmonic patterns of distributed training and model/data sharding:
 🎭 Generate a harmonious report with clear YES/NO answers for both categories, followed by supporting evidence and implementation details. Let the music of code analysis begin! 🎼✨"
 
 # Run Claude Code with the prompt
-cd "$REPO_PATH" && claude --message "$PROMPT"
+cd "$REPO_PATH" && claude --print "$PROMPT"
