@@ -19,45 +19,51 @@ fi
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Template prompt for Claude Code
-PROMPT="Please analyze the repository at $REPO_PATH for training performance and profiling opportunities. Use the profiler_analyzer.py script at $SCRIPT_DIR/profiler_analyzer.py to help with analysis.
+PROMPT="🎼 Lyra's Performance Symphony Analyzer 🎼
 
-Search the codebase for:
+Like Orpheus descending into the underworld to retrieve Eurydice, I shall dive deep into the performance depths of your training pipeline at $REPO_PATH to bring back insights! 🎭⚡
 
-1. **Existing Profiling Setup**: Look for profiler configurations, timing code, or performance monitoring
-   - PyTorch Lightning Profiler configurations
-   - Custom timing/profiling decorators
-   - Performance logging statements
-   - Profiler report files (*.prof, *.trace, etc.)
+Use the profiler_analyzer.py script at $SCRIPT_DIR/profiler_analyzer.py as your mystical lyre to help with analysis.
 
-2. **Training Pipeline Analysis**: Identify components that could benefit from profiling
-   - DataLoader and data preprocessing steps
-   - Model forward/backward passes
-   - Optimizer steps and gradient computations
-   - Callback functions and hooks
-   - I/O operations and checkpointing
+🌟 **Constellation I: Existing Profiling Setup** 🌟
+Search through the starlit code for profiler configurations, timing melodies, or performance monitoring:
+   🎵 PyTorch Lightning Profiler configurations
+   🎵 Custom timing/profiling decorators
+   🎵 Performance logging statements
+   🎵 Profiler report files (*.prof, *.trace, etc.)
 
-3. **Performance Bottleneck Indicators**: Look for potential performance issues
-   - Large dataset loading without optimization
-   - Complex data transformations
-   - Inefficient model architectures
-   - Memory-intensive operations
-   - Synchronous I/O operations
+⭐ **Constellation II: Training Pipeline Analysis** ⭐
+Identify celestial components that could benefit from the lyre's profiling touch:
+   🎶 DataLoader and data preprocessing steps
+   🎶 Model forward/backward passes
+   🎶 Optimizer steps and gradient computations
+   🎶 Callback functions and hooks
+   🎶 I/O operations and checkpointing
 
-4. **Profiling Recommendations**: Suggest specific profiling strategies
-   - Where to add PyTorch Lightning profiler
-   - Which components need detailed timing analysis
-   - Memory profiling opportunities
-   - GPU utilization monitoring points
+🌌 **Constellation III: Performance Bottleneck Indicators** 🌌
+Look for discordant notes in the performance symphony:
+   ✨ Large dataset loading without optimization
+   ✨ Complex data transformations
+   ✨ Inefficient model architectures
+   ✨ Memory-intensive operations
+   ✨ Synchronous I/O operations
 
-For each finding, please provide:
-- File locations with line numbers
-- Code snippets showing current implementation
-- Specific profiling recommendations
-- Expected bottlenecks to investigate
+🎯 **Constellation IV: Profiling Recommendations** 🎯
+Suggest specific harmonization strategies:
+   🎼 Where to add PyTorch Lightning profiler
+   🎼 Which components need detailed timing analysis
+   🎼 Memory profiling opportunities
+   🎼 GPU utilization monitoring points
 
-If you find existing profiler reports in the repository, use the profiler_analyzer.py script to analyze them and provide bottleneck analysis.
+🎭 For each melodic finding, please provide:
+🎵 File locations with line numbers
+🎵 Code snippets showing current implementation
+🎵 Specific profiling recommendations
+🎵 Expected bottlenecks to investigate
 
-Generate a comprehensive profiling analysis report with actionable recommendations for optimizing the training pipeline."
+🌟 If you find existing profiler reports in the repository, use the profiler_analyzer.py script like Orpheus's lyre to analyze them and provide bottleneck analysis.
+
+🎶 Generate a comprehensive performance symphony report with actionable recommendations for optimizing the training pipeline. Let the music of optimization begin! 🎼✨"
 
 # Run Claude Code with the prompt
 cd "$REPO_PATH" && claude --message "$PROMPT"

@@ -16,29 +16,33 @@ if [ ! -d "$REPO_PATH" ]; then
 fi
 
 # Template prompt for Claude Code
-PROMPT="Please analyze the repository at $REPO_PATH and generate a report summary covering:
+PROMPT="🎵 Welcome to Lyra - Your AI-powered repository harmonizer! 🎵
 
-1. **Mixed Precision Training**: Search the codebase for evidence of mixed precision training usage, including:
-   - Automatic Mixed Precision (AMP) implementations
-   - FP16/BF16 data types
-   - GradScaler usage
-   - Mixed precision configuration files
-   - Training scripts with precision settings
+Like Orpheus with his lyre, I shall weave through your codebase to create a melodious analysis of $REPO_PATH ✨
 
-2. **Sharding**: Search for distributed training and model/data sharding implementations, including:
-   - Data parallel training setups
-   - Model parallelism configurations
-   - Tensor sharding strategies
-   - Distributed training frameworks (DeepSpeed, FairScale, etc.)
-   - Pipeline parallelism implementations
+🎼 **Analysis Symphony - Movement I: Mixed Precision Training** 🎼
+Search the constellation of code for evidence of mixed precision training usage, including:
+   ⭐ Automatic Mixed Precision (AMP) implementations
+   ⭐ FP16/BF16 data types
+   ⭐ GradScaler usage
+   ⭐ Mixed precision configuration files
+   ⭐ Training scripts with precision settings
 
-For each finding, please provide:
-- File locations with line numbers
-- Brief code snippets showing the implementation
-- Configuration details if available
-- Framework/library used (PyTorch, TensorFlow, JAX, etc.)
+🎶 **Analysis Symphony - Movement II: Sharding & Distribution** 🎶
+Discover the harmonic patterns of distributed training and model/data sharding:
+   🌟 Data parallel training setups
+   🌟 Model parallelism configurations
+   🌟 Tensor sharding strategies
+   🌟 Distributed training frameworks (DeepSpeed, FairScale, etc.)
+   🌟 Pipeline parallelism implementations
 
-Generate a concise report with clear YES/NO answers for both categories, followed by supporting evidence and implementation details."
+🎯 For each celestial finding, please provide:
+🎵 File locations with line numbers
+🎵 Brief code snippets showing the implementation
+🎵 Configuration details if available
+🎵 Framework/library used (PyTorch, TensorFlow, JAX, etc.)
+
+🎭 Generate a harmonious report with clear YES/NO answers for both categories, followed by supporting evidence and implementation details. Let the music of code analysis begin! 🎼✨"
 
 # Run Claude Code with the prompt
 cd "$REPO_PATH" && claude --message "$PROMPT"
