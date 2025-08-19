@@ -97,12 +97,19 @@ This generates a performance analysis report covering:
 Generate profiler data by running training code in safe mode:
 
 ```bash
-lyra-profile /path/to/your/ml/repository
+lyra-profile /path/to/your/ml/repository [TRAINING_SCRIPT]
 ```
 
-**Example:**
+**Examples:**
 ```bash
+# Auto-detect training script
 lyra-profile ~/Work/my-pytorch-project
+
+# Profile specific training script
+lyra-profile ~/Work/my-pytorch-project train.py
+
+# Profile script in subdirectory
+lyra-profile ~/Work/my-pytorch-project scripts/train_model.py
 ```
 
 This safely profiles your training pipeline by:
@@ -122,7 +129,7 @@ For comprehensive analysis, use the commands in sequence:
 lyra-summarize ~/my-project
 
 # 2. Generate profiler data safely  
-lyra-profile ~/my-project
+lyra-profile ~/my-project train.py
 
 # 3. Analyze profiler output for bottlenecks
 lyra-analyze ~/my-project

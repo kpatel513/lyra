@@ -1,18 +1,37 @@
 #!/bin/bash
 
 # Lyra Profiler Script - Safe Mode Training Profiler
-# Usage: lyra-profile REPO_PATH
+# Usage: lyra-profile REPO_PATH [TRAINING_SCRIPT]
 
 if [ $# -eq 0 ]; then
-    echo "Usage: lyra-profile REPO_PATH"
+    echo "Usage: lyra-profile REPO_PATH [TRAINING_SCRIPT]"
+    echo ""
+    echo "Arguments:"
+    echo "  REPO_PATH        Path to the ML repository"
+    echo "  TRAINING_SCRIPT  Optional: Specific training script to profile (e.g., train.py, scripts/train_model.py)"
+    echo ""
+    echo "Examples:"
+    echo "  lyra-profile ~/my-project                    # Auto-detect training script"
+    echo "  lyra-profile ~/my-project train.py          # Profile specific script"
+    echo "  lyra-profile ~/my-project scripts/train.py  # Profile script in subdirectory"
     exit 1
 fi
 
 REPO_PATH="$1"
+TRAINING_SCRIPT="${2:-}"
 
 if [ ! -d "$REPO_PATH" ]; then
     echo "Error: Directory $REPO_PATH does not exist"
     exit 1
+fi
+
+# If training script is specified, validate it exists
+if [ -n "$TRAINING_SCRIPT" ]; then
+    FULL_SCRIPT_PATH="$REPO_PATH/$TRAINING_SCRIPT"
+    if [ ! -f "$FULL_SCRIPT_PATH" ]; then
+        echo "Error: Training script $TRAINING_SCRIPT does not exist in $REPO_PATH"
+        exit 1
+    fi
 fi
 
 # Get the directory where this script is located
@@ -22,6 +41,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROMPT="🎼 Lyra's Safe Mode Profiler - Orpheus's Training Harmonizer 🎼
 
 Like Orpheus carefully tuning his lyre before the performance, I shall prepare your training code at $REPO_PATH for safe profiling! 🎭✨
+
+$(if [ -n "$TRAINING_SCRIPT" ]; then echo "🎯 **Target Training Script**: $TRAINING_SCRIPT"; else echo "🔍 **Auto-Detection Mode**: I will search for and identify the main training script"; fi)
 
 🌟 **Mission: Transform Training Code into Safe Profiling Mode** 🌟
 
@@ -59,10 +80,18 @@ Execute the safe profiling run:
 5. **Restorative**: Clean up all temporary modifications
 
 🌌 **Search Strategy:** 🌌
-Look for training entry points:
-   🎵 main training scripts (train.py, main.py, run.py)
-   🎵 PyTorch Lightning training modules
-   🎵 Configuration files for training parameters
+$(if [ -n "$TRAINING_SCRIPT" ]; then 
+    echo "Focus on the specified training script: $TRAINING_SCRIPT"
+    echo "   🎯 Analyze and modify the target script: $TRAINING_SCRIPT"
+    echo "   🎯 Identify dependencies and imports used by this script"
+    echo "   🎯 Configure profiler specifically for this training pipeline"
+else
+    echo "Auto-detect training entry points:"
+    echo "   🎵 main training scripts (train.py, main.py, run.py)"
+    echo "   🎵 PyTorch Lightning training modules"
+    echo "   🎵 scripts/ or training/ directories"
+    echo "   🎵 Configuration files indicating training entry points"
+fi)
    🎵 DataLoader and model definitions
    🎵 Trainer initialization code
 
