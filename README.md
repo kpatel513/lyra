@@ -36,22 +36,25 @@ Test that Lyra is working correctly:
 ```bash
 # If added to PATH:
 lyra-summarize
-lyra-analyze
+lyra-analyze  
+lyra-profile
 
 # Or use the full paths:
 /path/to/lyra/lyra-summarize
 /path/to/lyra/lyra-analyze
+/path/to/lyra/lyra-profile
 ```
 
 You should see usage messages:
 ```
 Usage: lyra-summarize REPO_PATH
 Usage: lyra-analyze REPO_PATH
+Usage: lyra-profile REPO_PATH
 ```
 
 ## Usage
 
-Lyra provides two main analysis commands:
+Lyra provides three main commands for comprehensive ML training analysis:
 
 ### Repository Analysis (lyra-summarize)
 
@@ -89,7 +92,43 @@ This generates a performance analysis report covering:
 3. **Performance Bottleneck Indicators** - Potential performance issues in the code
 4. **Profiling Recommendations** - Specific strategies to optimize training performance
 
-Both analyses are powered by Claude Code and provide detailed file locations, code snippets, and implementation details.
+### Safe Profiling (lyra-profile)
+
+Generate profiler data by running training code in safe mode:
+
+```bash
+lyra-profile /path/to/your/ml/repository
+```
+
+**Example:**
+```bash
+lyra-profile ~/Work/my-pytorch-project
+```
+
+This safely profiles your training pipeline by:
+1. **Safe Mode Operation** - Disables model saving, prevents data modification, limits to 100 steps
+2. **Advanced Profiling** - Adds PyTorch Lightning AdvancedProfiler for detailed timing analysis
+3. **Automated Execution** - Runs modified training code and generates profiler reports
+4. **Clean Restoration** - Restores all temporarily modified files
+
+The generated profiler report can then be analyzed using `lyra-analyze` for bottleneck identification.
+
+### Workflow Integration
+
+For comprehensive analysis, use the commands in sequence:
+
+```bash
+# 1. Analyze repository structure and optimizations
+lyra-summarize ~/my-project
+
+# 2. Generate profiler data safely  
+lyra-profile ~/my-project
+
+# 3. Analyze profiler output for bottlenecks
+lyra-analyze ~/my-project
+```
+
+All analyses are powered by Claude Code and provide detailed file locations, code snippets, and implementation details.
 
 ## Requirements
 
@@ -99,7 +138,7 @@ Both analyses are powered by Claude Code and provide detailed file locations, co
 ## Troubleshooting
 
 **Command not found:**
-- Ensure the scripts are executable: `chmod +x lyra-summarize lyra-analyze`
+- Ensure the scripts are executable: `chmod +x lyra-summarize lyra-analyze lyra-profile`
 - Check that the path is correct when added to PATH
 - Try using the full path to the scripts
 

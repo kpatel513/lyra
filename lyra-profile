@@ -1,0 +1,94 @@
+#!/bin/bash
+
+# Lyra Profiler Script - Safe Mode Training Profiler
+# Usage: lyra-profile REPO_PATH
+
+if [ $# -eq 0 ]; then
+    echo "Usage: lyra-profile REPO_PATH"
+    exit 1
+fi
+
+REPO_PATH="$1"
+
+if [ ! -d "$REPO_PATH" ]; then
+    echo "Error: Directory $REPO_PATH does not exist"
+    exit 1
+fi
+
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Template prompt for Claude Code
+PROMPT="🎼 Lyra's Safe Mode Profiler - Orpheus's Training Harmonizer 🎼
+
+Like Orpheus carefully tuning his lyre before the performance, I shall prepare your training code at $REPO_PATH for safe profiling! 🎭✨
+
+🌟 **Mission: Transform Training Code into Safe Profiling Mode** 🌟
+
+I need to modify the training pipeline to run in safe mode with comprehensive profiling:
+
+🎵 **Phase I: Safe Mode Transformation** 🎵
+Transform the training code to prevent any permanent changes:
+   ⭐ Disable all model saving and checkpointing
+   ⭐ Prevent any permanent data rewriting or modification
+   ⭐ Add backup/restore mechanisms for any temporary changes
+   ⭐ Limit training loop to exactly 100 steps maximum
+   ⭐ Add early stopping after profiling is complete
+
+🎶 **Phase II: Advanced Profiler Integration** 🎶
+Add comprehensive PyTorch Lightning profiling capabilities:
+   🌟 Integrate PyTorch Lightning's AdvancedProfiler
+   🌟 Configure profiler to capture detailed timing information
+   🌟 Set up profiler output to generate detailed reports
+   🌟 Add memory profiling and GPU utilization tracking
+   🌟 Configure profiler for training pipeline bottleneck analysis
+
+🎭 **Phase III: Profiling Execution** 🎭
+Execute the safe profiling run:
+   ✨ Run the modified training code with profiler enabled
+   ✨ Generate comprehensive profiler reports
+   ✨ Capture timing data for all training components
+   ✨ Save profiler output to lyra_profiler_report.txt
+   ✨ Restore any temporarily modified files
+
+🎯 **Implementation Requirements:** 🎯
+1. **Safety First**: Never permanently modify user's code or data
+2. **Comprehensive**: Profile all major training components
+3. **Automated**: Minimal user intervention required  
+4. **Detailed**: Generate actionable profiler output
+5. **Restorative**: Clean up all temporary modifications
+
+🌌 **Search Strategy:** 🌌
+Look for training entry points:
+   🎵 main training scripts (train.py, main.py, run.py)
+   🎵 PyTorch Lightning training modules
+   🎵 Configuration files for training parameters
+   🎵 DataLoader and model definitions
+   🎵 Trainer initialization code
+
+🎼 **Profiler Configuration Template:** 🎼
+Configure the profiler to capture:
+   🎶 Function-level timing information
+   🎶 Memory allocation patterns
+   🎶 GPU utilization metrics
+   🎶 Data loading bottlenecks
+   🎶 Model forward/backward pass timing
+
+⚡ **Expected Output:** ⚡
+Generate a detailed profiler report that lyra-analyze can process to identify:
+   🌟 Training pipeline bottlenecks
+   🌟 Memory inefficiencies
+   🌟 Data loading issues
+   🌟 Model computation hotspots
+   🌟 Optimization opportunities
+
+🎭 Execute this safe profiling transformation and run the training with comprehensive profiling enabled. Let the performance symphony begin! 🎼✨
+
+After profiling is complete, provide:
+🎵 Path to generated profiler report
+🎵 Summary of what was profiled
+🎵 Any temporary modifications made and restored
+🎵 Instructions for using lyra-analyze with the generated report"
+
+# Run Claude Code with the prompt
+cd "$REPO_PATH" && claude --message "$PROMPT"
