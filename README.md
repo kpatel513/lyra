@@ -14,32 +14,20 @@ Lyra is an AI Agent that automatically analyzes and optimizes ML training code b
 1. **Clone or download the Lyra repository**
    ```bash
    git clone [your-repo-url] lyra
-   # or download the lyra directory to your desired location
-   ```
-
-2. **Make the scripts executable**
-   ```bash
    cd lyra
-   chmod +x lyra-summarize lyra-profile
    ```
 
-3. **Add Lyra to your PATH (optional)**
-   
-   For global access from anywhere in your terminal:
-   
-   **For Zsh (macOS default):**
+2. **Run the installation script**
    ```bash
-   echo 'export PATH="$PATH:/path/to/lyra"' >> ~/.zshrc
-   source ~/.zshrc
+   ./install.sh
    ```
-   
-   **For Bash:**
-   ```bash
-   echo 'export PATH="$PATH:/path/to/lyra"' >> ~/.bashrc
-   source ~/.bashrc
-   ```
-   
-   Replace `/path/to/lyra` with the actual path to your lyra directory.
+
+The install script will automatically:
+- Check for Claude Code CLI
+- Make scripts executable
+- Add Lyra to your PATH in `~/.zshrc`
+- Test the installation
+- Backup your existing `~/.zshrc`
 
 ### Verify Installation
 
