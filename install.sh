@@ -25,7 +25,7 @@ echo "✅ Claude Code CLI found"
 # Make scripts executable
 echo "🔧 Making scripts executable..."
 chmod +x "$LYRA_DIR/lyra-summarize"
-chmod +x "$LYRA_DIR/lyra-profile"
+chmod +x "$LYRA_DIR/lyra-analyze"
 
 echo "✅ Scripts are now executable"
 
@@ -64,10 +64,10 @@ else
     exit 1
 fi
 
-if "$LYRA_DIR/lyra-profile" 2>&1 | grep -q "Usage:"; then
-    echo "✅ lyra-profile is working"
+if "$LYRA_DIR/lyra-analyze" 2>&1 | grep -q "Usage:"; then
+    echo "✅ lyra-analyze is working"
 else
-    echo "❌ lyra-profile test failed"
+    echo "❌ lyra-analyze test failed"
     exit 1
 fi
 
@@ -77,10 +77,10 @@ echo ""
 echo "📋 Next steps:"
 echo "   1. Restart your terminal or run: source ~/.zshrc"
 echo "   2. Test with: lyra-summarize"
-echo "   3. Test with: lyra-profile"
+echo "   3. Test with: lyra-analyze"
 echo ""
 echo "📖 Usage examples:"
 echo "   lyra-summarize ~/my-ml-project"
-echo "   lyra-profile ~/my-pytorch-training"
+echo "   lyra-analyze ~/my-pytorch-training"
 echo ""
 echo "🔗 For more information, see: https://github.com/your-repo/lyra"

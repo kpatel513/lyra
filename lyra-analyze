@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# Lyra Profiling Analysis Script
-# Usage: lyra-profile REPO_PATH
+# Lyra Analysis Script
+# Usage: lyra-analyze REPO_PATH
 
 if [ $# -eq 0 ]; then
-    echo "Usage: lyra-profile REPO_PATH"
+    echo "Usage: lyra-analyze REPO_PATH"
     exit 1
 fi
 

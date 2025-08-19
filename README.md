@@ -24,7 +24,7 @@ Lyra is an AI Agent that automatically analyzes and optimizes ML training code b
 
 The install script will automatically:
 - Check for Claude Code CLI
-- Make scripts executable
+- Make scripts executable  
 - Add Lyra to your PATH in `~/.zshrc`
 - Test the installation
 - Backup your existing `~/.zshrc`
@@ -36,17 +36,17 @@ Test that Lyra is working correctly:
 ```bash
 # If added to PATH:
 lyra-summarize
-lyra-profile
+lyra-analyze
 
 # Or use the full paths:
 /path/to/lyra/lyra-summarize
-/path/to/lyra/lyra-profile
+/path/to/lyra/lyra-analyze
 ```
 
 You should see usage messages:
 ```
 Usage: lyra-summarize REPO_PATH
-Usage: lyra-profile REPO_PATH
+Usage: lyra-analyze REPO_PATH
 ```
 
 ## Usage
@@ -70,20 +70,20 @@ This generates a comprehensive report covering:
 1. **Mixed Precision Training** - Detection of AMP, FP16/BF16 usage, GradScaler, etc.
 2. **Sharding** - Analysis of distributed training, model parallelism, tensor sharding strategies
 
-### Performance Profiling Analysis (lyra-profile)
+### Performance Analysis (lyra-analyze)
 
 Analyze training pipelines for performance bottlenecks and profiling opportunities:
 
 ```bash
-lyra-profile /path/to/your/ml/repository
+lyra-analyze /path/to/your/ml/repository
 ```
 
 **Example:**
 ```bash
-lyra-profile ~/Work/my-pytorch-project
+lyra-analyze ~/Work/my-pytorch-project
 ```
 
-This generates a profiling analysis report covering:
+This generates a performance analysis report covering:
 1. **Existing Profiling Setup** - Current profiler configurations and performance monitoring
 2. **Training Pipeline Analysis** - Components that could benefit from profiling
 3. **Performance Bottleneck Indicators** - Potential performance issues in the code
@@ -99,7 +99,7 @@ Both analyses are powered by Claude Code and provide detailed file locations, co
 ## Troubleshooting
 
 **Command not found:**
-- Ensure the scripts are executable: `chmod +x lyra-summarize lyra-profile`
+- Ensure the scripts are executable: `chmod +x lyra-summarize lyra-analyze`
 - Check that the path is correct when added to PATH
 - Try using the full path to the scripts
 
