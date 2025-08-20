@@ -1,167 +1,30 @@
 #!/bin/bash
 
 # Lyra Profiler Script - Safe Mode Training Profiler
-# Usage: lyra-profile REPO_PATH [TRAINING_SCRIPT]
+# Usage: lyra-profile TRAINING_SCRIPT ENV_PATH
 
-if [ $# -eq 0 ]; then
-    echo "Usage: lyra-profile REPO_PATH [TRAINING_SCRIPT]"
-    echo ""
-    echo "Arguments:"
-    echo "  REPO_PATH        Path to the ML repository"
-    echo "  TRAINING_SCRIPT  Optional: Specific training script to profile (e.g., train.py, scripts/train_model.py)"
-    echo ""
-    echo "Examples:"
-    echo "  lyra-profile ~/my-project                    # Auto-detect training script"
-    echo "  lyra-profile ~/my-project train.py          # Profile specific script"
-    echo "  lyra-profile ~/my-project scripts/train.py  # Profile script in subdirectory"
-    exit 1
-fi
-
-REPO_PATH="$1"
-TRAINING_SCRIPT="${2:-}"
-
-if [ ! -d "$REPO_PATH" ]; then
-    echo "Error: Directory $REPO_PATH does not exist"
-    exit 1
-fi
-
-# If training script is specified, validate it exists
-if [ -n "$TRAINING_SCRIPT" ]; then
-    FULL_SCRIPT_PATH="$REPO_PATH/$TRAINING_SCRIPT"
-    if [ ! -f "$FULL_SCRIPT_PATH" ]; then
-        echo "Error: Training script $TRAINING_SCRIPT does not exist in $REPO_PATH"
-        exit 1
-    fi
-fi
-
-# Get the directory where this script is located
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+TRAINING_SCRIPT="$1"
+ENV_PATH="$2"
 
 # Template prompt for Claude Code
-PROMPT="🎼 Lyra's Safe Mode Profiler - Orpheus's Training Harmonizer 🎼
+PROMPT="Modify the training code $TRAINING_SCRIPT to:\
+  1) put it in safe mode, where model saving is disabled and no permanent data rewriting/modification
+   occurs\
+  2) the training is limited to 100 steps\
+  3) The pytorch advanced profiler is added to the training loop.\
+  Execute this training loop with the environment $ENV_PATH and save the outputs to the
+   file lyra-profile.txt in the same directory as the training file.
+  Restore the original training script when completed."
 
-Like Orpheus carefully tuning his lyre before the performance, I shall prepare your training code at $REPO_PATH for safe profiling! 🎭✨
-
-$(if [ -n "$TRAINING_SCRIPT" ]; then echo "🎼 **Target Training Script**: $TRAINING_SCRIPT"; else echo "🔍 **Auto-Detection Mode**: I will search for and identify the main training script"; fi)
-
-🌟 **Mission: Transform Training Code into Safe Profiling Mode** 🌟
-
-I need to modify the training pipeline to run in safe mode with comprehensive profiling:
-
-🎵 **Phase I: Environment Setup** 🎵
-Run lyra-setup to prepare the celestial environment:
-   ⭐ Use: lyra-setup $REPO_PATH to create isolated profiling environment
-   ⭐ Environment setup handles dependency detection and installation automatically
-   ⭐ Skip this phase if environment is already prepared or not needed
-
-🎶 **Phase II: Safe Mode Transformation** 🎶
-Transform the training code to prevent any permanent changes:
-   🌟 Disable all model saving and checkpointing
-   🌟 Prevent any permanent data rewriting or modification
-   🌟 Add backup/restore mechanisms for any temporary changes
-   🌟 Limit training loop to exactly 100 steps maximum
-   🌟 Add early stopping after profiling is complete
-
-🎭 **Phase III: Advanced Profiler Integration** 🎭
-Add comprehensive PyTorch Lightning profiling capabilities:
-   ✨ Integrate PyTorch Lightning's AdvancedProfiler
-   ✨ Configure profiler to capture detailed timing information
-   ✨ Set up profiler output to generate detailed reports
-   ✨ Add memory profiling and GPU utilization tracking
-   ✨ Configure profiler for training pipeline bottleneck analysis
-
-🌌 **Phase IV: Profiling Execution** 🌌
-Execute the safe profiling run in the prepared environment:
-   🎼 Activate the isolated profiling environment
-   🎼 Run the modified training code with profiler enabled
-   🎼 Generate comprehensive profiler reports
-   🎼 Capture timing data for all training components
-   🎼 Save profiler output to lyra_profiler_report.txt
-
-🌟 **Phase V: Cleanup and Restoration** 🌟
-Clean up after profiling completion:
-   🎵 Restore any temporarily modified files
-   🎵 Deactivate and optionally remove the profiling environment
-   🎵 Provide summary of profiling results and next steps
-
-🎭 **Implementation Requirements:** 🎭
-1. **Environment Isolation**: Create isolated environment to avoid conflicts with user's setup
-2. **Safety First**: Never permanently modify user's code or data
-3. **Comprehensive**: Profile all major training components
-4. **Automated**: Handle environment setup and dependency installation automatically
-5. **Detailed**: Generate actionable profiler output
-6. **Restorative**: Clean up all temporary modifications and environments
-
-🌌 **Search Strategy:** 🌌
-$(if [ -n "$TRAINING_SCRIPT" ]; then 
-    echo "Focus on the specified training script: $TRAINING_SCRIPT"
-    echo "   🎼 Analyze and modify the target script: $TRAINING_SCRIPT"
-    echo "   🎼 Identify dependencies and imports used by this script"
-    echo "   🎼 Configure profiler specifically for this training pipeline"
-else
-    echo "Auto-detect training entry points:"
-    echo "   🎵 main training scripts (train.py, main.py, run.py)"
-    echo "   🎵 PyTorch Lightning training modules"
-    echo "   🎵 scripts/ or training/ directories"
-    echo "   🎵 Configuration files indicating training entry points"
-fi)
-   🎵 DataLoader and model definitions
-   🎵 Trainer initialization code
-
-🎼 **Profiler Configuration Template:** 🎼
-Configure the profiler to capture:
-   🎶 Function-level timing information
-   🎶 Memory allocation patterns
-   🎶 GPU utilization metrics
-   🎶 Data loading bottlenecks
-   🎶 Model forward/backward pass timing
-
-⚡ **Expected Output:** ⚡
-Generate a detailed profiler report that lyra-analyze can process to identify:
-   🌟 Training pipeline bottlenecks
-   🌟 Memory inefficiencies
-   🌟 Data loading issues
-   🌟 Model computation hotspots
-   🌟 Optimization opportunities
-
-🎼 **Environment Setup Reference:** 🎼
-Environment setup is handled by the lyra-setup script:
-   🎶 Run 'lyra-setup $REPO_PATH' to create isolated environment
-   🎶 Environment setup automatically detects and handles all configuration types
-   🎶 Skip environment setup if already prepared or working in existing environment
-
-🎭 Execute this complete safe profiling workflow with environment setup and run the training with comprehensive profiling enabled. Let the performance symphony begin! 🎼✨
-
-After profiling is complete, provide:
-🎵 Details of environment created and packages installed
-🎵 Path to generated profiler report
-🎵 Summary of what was profiled
-🎵 Any temporary modifications made and restored
-🎵 Instructions for using lyra-analyze with the generated report
-🎵 Environment cleanup status and instructions"
 
 # Display progress information
 echo "🎼 Lyra Safe Mode Profiler Starting..."
-echo "📂 Repository: $REPO_PATH"
-if [ -n "$TRAINING_SCRIPT" ]; then
-    echo "🎯 Target Script: $TRAINING_SCRIPT"
-else
-    echo "🔍 Mode: Auto-detection"
-fi
-echo ""
-echo "🎵 Phase I: Preparing celestial environment..."
-echo "🎶 Phase II: Transforming code into safe mode..."
-echo "🎭 Phase III: Integrating advanced profiler..."
-echo "🌌 Phase IV: Executing profiling symphony..."
-echo "🌟 Phase V: Harmonious cleanup and restoration..."
-echo ""
-echo "🎭 Orpheus carefully tunes his lyre for the performance ahead..."
 echo "   This orchestration may take 3-10 minutes depending on training complexity..."
 echo "   Environment setup, profiling execution, and cleanup will be performed safely."
 echo ""
 
-# Run Claude Code with the prompt
-cd "$REPO_PATH" && claude --print "$PROMPT"
+# Run Claude Code with the prompt (auto-accept edits to avoid interactive prompts)
+claude --permission-mode acceptEdits "$PROMPT"
 
 # Display completion message
 echo ""
