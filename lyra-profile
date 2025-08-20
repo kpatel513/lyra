@@ -49,12 +49,10 @@ $(if [ -n "$TRAINING_SCRIPT" ]; then echo "🎼 **Target Training Script**: $TRA
 I need to modify the training pipeline to run in safe mode with comprehensive profiling:
 
 🎵 **Phase I: Environment Setup** 🎵
-Prepare the celestial environment for safe profiling:
-   ⭐ Detect environment configuration files (requirements.txt, environment.yml, pyproject.toml, etc.)
-   ⭐ Create isolated profiling environment (conda/venv) with unique name like 'lyra-profile-[timestamp]'
-   ⭐ Install all dependencies from repository's configuration files
-   ⭐ Verify environment setup and required packages are available
-   ⭐ Handle different package managers (pip, conda, poetry, pipenv)
+Run lyra-setup to prepare the celestial environment:
+   ⭐ Use: lyra-setup $REPO_PATH to create isolated profiling environment
+   ⭐ Environment setup handles dependency detection and installation automatically
+   ⭐ Skip this phase if environment is already prepared or not needed
 
 🎶 **Phase II: Safe Mode Transformation** 🎶
 Transform the training code to prevent any permanent changes:
@@ -126,15 +124,11 @@ Generate a detailed profiler report that lyra-analyze can process to identify:
    🌟 Model computation hotspots
    🌟 Optimization opportunities
 
-🎼 **Environment Setup Strategy:** 🎼
-Handle common environment configurations:
-   🎶 requirements.txt → pip install -r requirements.txt
-   🎶 environment.yml/environment.yaml → conda env create -f environment.yml
-   🎶 pyproject.toml → poetry install or pip install -e .
-   🎶 Pipfile → pipenv install
-   🎶 setup.py → pip install -e .
-   🎶 Docker configurations → Analyze Dockerfile for dependencies
-   🎶 README instructions → Parse installation commands
+🎼 **Environment Setup Reference:** 🎼
+Environment setup is handled by the lyra-setup script:
+   🎶 Run 'lyra-setup $REPO_PATH' to create isolated environment
+   🎶 Environment setup automatically detects and handles all configuration types
+   🎶 Skip environment setup if already prepared or working in existing environment
 
 🎭 Execute this complete safe profiling workflow with environment setup and run the training with comprehensive profiling enabled. Let the performance symphony begin! 🎼✨
 

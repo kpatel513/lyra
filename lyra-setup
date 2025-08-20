@@ -1,0 +1,99 @@
+#!/bin/bash
+
+# Lyra Environment Setup Script
+# Usage: lyra-setup REPO_PATH [ENVIRONMENT_NAME]
+# This script handles the environment setup phase for Lyra profiling
+
+if [ $# -eq 0 ]; then
+    echo "Usage: lyra-setup REPO_PATH [ENVIRONMENT_NAME]"
+    echo ""
+    echo "Arguments:"
+    echo "  REPO_PATH         Path to the ML repository"
+    echo "  ENVIRONMENT_NAME  Optional: Custom name for the profiling environment"
+    echo ""
+    echo "Examples:"
+    echo "  lyra-setup ~/my-project                    # Auto-generate environment name"
+    echo "  lyra-setup ~/my-project my-custom-env     # Use custom environment name"
+    exit 1
+fi
+
+REPO_PATH="$1"
+ENVIRONMENT_NAME="${2:-lyra-profile-$(date +%s)}"
+
+if [ ! -d "$REPO_PATH" ]; then
+    echo "Error: Directory $REPO_PATH does not exist"
+    exit 1
+fi
+
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Template prompt for Claude Code - Environment Setup Phase
+PROMPT="🎼 Lyra's Environment Setup - Orpheus's Celestial Preparation 🎼
+
+Like Orpheus preparing the sacred grove for his performance, I shall create the perfect environment for safe profiling at $REPO_PATH! 🎭✨
+
+🌟 **Environment Name**: $ENVIRONMENT_NAME
+
+🎵 **Phase I: Environment Setup** 🎵
+Prepare the celestial environment for safe profiling:
+   ⭐ Detect environment configuration files (requirements.txt, environment.yml, pyproject.toml, etc.)
+   ⭐ Create isolated profiling environment (conda/venv) with name: '$ENVIRONMENT_NAME'
+   ⭐ Install all dependencies from repository's configuration files
+   ⭐ Verify environment setup and required packages are available
+   ⭐ Handle different package managers (pip, conda, poetry, pipenv)
+
+🎼 **Environment Setup Strategy:** 🎼
+Handle common environment configurations:
+   🎶 requirements.txt → pip install -r requirements.txt
+   🎶 environment.yml/environment.yaml → conda env create -f environment.yml
+   🎶 pyproject.toml → poetry install or pip install -e .
+   🎶 Pipfile → pipenv install
+   🎶 setup.py → pip install -e .
+   🎶 Docker configurations → Analyze Dockerfile for dependencies
+   🎶 README instructions → Parse installation commands
+
+🎭 **Implementation Requirements:** 🎭
+1. **Environment Isolation**: Create isolated environment to avoid conflicts with user's setup
+2. **Safety First**: Never permanently modify user's configuration files
+3. **Automated**: Handle environment setup and dependency installation automatically
+4. **Comprehensive**: Install all required dependencies for the training pipeline
+5. **Validation**: Verify successful environment creation and package installation
+6. **Documentation**: Provide clear instructions for environment activation and usage
+
+⚡ **Expected Output:** ⚡
+   🌟 Successfully created and configured isolated environment: $ENVIRONMENT_NAME
+   🌟 All dependencies installed and verified
+   🌟 Environment activation instructions
+   🌟 List of installed packages and versions
+   🌟 Path to environment and activation script
+
+🎼 Execute this environment setup workflow and prepare the perfect celestial stage for profiling! 🎼✨
+
+After environment setup is complete, provide:
+🎵 Environment name and location
+🎵 Activation command for the environment
+🎵 List of installed packages
+🎵 Verification that all dependencies are satisfied
+🎵 Instructions for using this environment with lyra-profile"
+
+# Display progress information
+echo "🎼 Lyra Environment Setup Starting..."
+echo "📂 Repository: $REPO_PATH"
+echo "🌌 Environment: $ENVIRONMENT_NAME"
+echo ""
+echo "🎵 Detecting configuration files..."
+echo "🎶 Creating isolated environment..."
+echo "🎭 Installing dependencies..."
+echo "🌟 Verifying environment setup..."
+echo ""
+echo "🎭 Orpheus prepares the sacred grove for the performance ahead..."
+echo "   Environment setup may take 2-5 minutes depending on dependencies..."
+echo ""
+
+# Run Claude Code with the prompt
+cd "$REPO_PATH" && claude --print "$PROMPT"
+
+# Display completion message
+echo ""
+echo "🎼✨ Environment setup symphony complete! Your celestial stage is ready for profiling."

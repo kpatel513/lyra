@@ -38,11 +38,13 @@ Test that Lyra is working correctly:
 lyra-summarize
 lyra-analyze  
 lyra-profile
+lyra-setup
 
 # Or use the full paths:
 /path/to/lyra/lyra-summarize
 /path/to/lyra/lyra-analyze
 /path/to/lyra/lyra-profile
+/path/to/lyra/lyra-setup
 ```
 
 You should see usage messages:
@@ -50,11 +52,12 @@ You should see usage messages:
 Usage: lyra-summarize REPO_PATH
 Usage: lyra-analyze REPO_PATH
 Usage: lyra-profile REPO_PATH
+Usage: lyra-setup REPO_PATH
 ```
 
 ## Usage
 
-Lyra provides three main commands for comprehensive ML training analysis:
+Lyra provides four main commands for comprehensive ML training analysis:
 
 ### Repository Analysis (lyra-summarize)
 
@@ -113,13 +116,39 @@ lyra-profile ~/Work/my-pytorch-project scripts/train_model.py
 ```
 
 This safely profiles your training pipeline by:
-1. **Environment Setup** - Creates isolated environment and installs dependencies automatically
-2. **Safe Mode Operation** - Disables model saving, prevents data modification, limits to 100 steps
-3. **Advanced Profiling** - Adds PyTorch Lightning AdvancedProfiler for detailed timing analysis
-4. **Automated Execution** - Runs modified training code and generates profiler reports
-5. **Clean Restoration** - Restores all temporarily modified files and cleans up environments
+1. **Safe Mode Operation** - Disables model saving, prevents data modification, limits to 100 steps
+2. **Advanced Profiling** - Adds PyTorch Lightning AdvancedProfiler for detailed timing analysis
+3. **Automated Execution** - Runs modified training code and generates profiler reports
+4. **Clean Restoration** - Restores all temporarily modified files and cleans up environments
+
+**Note:** Environment setup is handled by the separate `lyra-setup` command and can be run independently when needed.
 
 The generated profiler report can then be analyzed using `lyra-analyze` for bottleneck identification.
+
+### Environment Setup (lyra-setup)
+
+Create isolated environments for safe profiling:
+
+```bash
+lyra-setup /path/to/your/ml/repository [ENVIRONMENT_NAME]
+```
+
+**Examples:**
+```bash
+# Auto-generate environment name
+lyra-setup ~/Work/my-pytorch-project
+
+# Use custom environment name
+lyra-setup ~/Work/my-pytorch-project my-custom-env
+```
+
+This creates an isolated environment by:
+1. **Configuration Detection** - Automatically detects requirements.txt, environment.yml, pyproject.toml, etc.
+2. **Environment Creation** - Creates conda/venv environment with unique name
+3. **Dependency Installation** - Installs all project dependencies automatically
+4. **Verification** - Ensures environment is properly configured and ready for profiling
+
+**Note:** This step is optional if you already have a suitable environment configured.
 
 ### Workflow Integration
 
@@ -129,10 +158,13 @@ For comprehensive analysis, use the commands in sequence:
 # 1. Analyze repository structure and optimizations
 lyra-summarize ~/my-project
 
-# 2. Generate profiler data safely  
+# 2. Set up isolated environment (optional)
+lyra-setup ~/my-project
+
+# 3. Generate profiler data safely  
 lyra-profile ~/my-project train.py
 
-# 3. Analyze profiler output for bottlenecks
+# 4. Analyze profiler output for bottlenecks
 lyra-analyze ~/my-project
 ```
 
@@ -146,7 +178,7 @@ All analyses are powered by Claude Code and provide detailed file locations, cod
 ## Troubleshooting
 
 **Command not found:**
-- Ensure the scripts are executable: `chmod +x lyra-summarize lyra-analyze lyra-profile`
+- Ensure the scripts are executable: `chmod +x lyra-summarize lyra-analyze lyra-profile lyra-setup`
 - Check that the path is correct when added to PATH
 - Try using the full path to the scripts
 
