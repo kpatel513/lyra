@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lyra Design System - Style Guide</title>
+    <style>
+        /* Base System */
+        :root {
+            /* Deep Space Foundation */
+            --void-black: #0a0a0f;
+            --cosmos-dark: #1a1a2e;
+            --nebula-purple: #16213e;
+            --stellar-blue: #0f3460;
+            
+            /* Lyra Constellation (Brand) */
+            --lyra-primary: #4a9eff;
+            --lyra-secondary: #7c3aed;
+            --vega-bright: #00d4ff;
+            --constellation-gold: #fbbf24;
+            
+            /* Performance Spectrum */
+            --critical-red: #ef4444;
+            --warning-amber: #f59e0b;
+            --success-green: #10b981;
+            --neutral-slate: #64748b;
+            --neutral-light: #94a3b8;
+            
+            /* Glass & Transparency */
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-hover: rgba(255, 255, 255, 0.08);
+            
+            /* Spacing System (Stellar Units) */
+            --stellar-xs: 4px;
+            --stellar-sm: 8px;
+            --stellar-md: 12px;
+            --stellar-lg: 16px;
+            --stellar-xl: 20px;
+            --stellar-2xl: 24px;
+            --stellar-3xl: 32px;
+            --stellar-4xl: 48px;
+            --stellar-5xl: 64px;
+            
+            /* Typography Scale */
+            --font-size-xs: 10px;
+            --font-size-sm: 12px;
+            --font-size-base: 14px;
+            --font-size-lg: 16px;
+            --font-size-xl: 18px;
+            --font-size-2xl: 24px;
+            --font-size-3xl: 32px;
+            --font-size-4xl: 48px;
+            
+            /* Border Radius */
+            --radius-sm: 4px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+            --radius-xl: 16px;
+            --radius-pill: 24px;
+            --radius-full: 50%;
+            
+            /* Shadows */
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.15);
+            --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.2);
+            --shadow-glow: 0 0 24px rgba(74, 158, 255, 0.3);
+            
+            /* Animations */
+            --duration-fast: 0.15s;
+            --duration-normal: 0.3s;
+            --duration-slow: 0.5s;
+            --easing-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+            --easing-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--void-black);
+            color: white;
+            line-height: 1.5;
+            overflow-x: hidden;
+        }
+        
+        .design-system {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: var(--stellar-2xl);
+        }
+        
+        .section {
+            margin-bottom: var(--stellar-5xl);
+            background: var(--cosmos-dark);
+            border-radius: var(--radius-xl);
+            padding: var(--stellar-3xl);
+            border: 1px solid var(--nebula-purple);
+        }
+        
+        .section-title {
+            font-size: var(--font-size-3xl);
+            font-weight: 700;
+            margin-bottom: var(--stellar-3xl);
+            color: var(--lyra-primary);
+            display: flex;
+            align-items: center;
+            gap: var(--stellar-lg);
+        }
+        
+        .section-subtitle {
+            font-size: var(--font-size-xl);
+            font-weight: 600;
+            margin: var(--stellar-3xl) 0 var(--stellar-xl) 0;
+            color: var(--vega-bright);
+        }
+        
+        .grid {
+            display: grid;
+            gap: var(--stellar-xl);
+        }
+        
+        .grid-2 { grid-template-columns: repeat(2, 1fr); }
+        .grid-3 { grid-template-columns: repeat(3, 1fr); }
+        .grid-4 { grid-template-columns: repeat(4, 1fr); }
+        .grid-5 { grid-template-columns: repeat(5, 1fr); }
+        .grid-auto { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+        
+        /* Color Palette Cards */
+        .color-card {
+            background: var(--nebula-purple);
+            border-radius: var(--radius-lg);
+            padding: var(--stellar-xl);
+            text-align: center;
+            border: 1px solid var(--glass-border);
+            transition: transform var(--duration-normal) var(--easing-smooth);
+        }
+        
+        .color-card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .color-swatch {
+            width: 100%;
+            height: 80px;
+            border-radius: var(--radius-md);
+            margin-bottom: var(--stellar-md);
+            border: 1px solid var(--glass-border);
+            cursor: pointer;
+            transition: transform var(--duration-fast) var(--easing-smooth);
+        }
+        
+        .color-swatch:hover {
+            transform: scale(1.05);
+        }
+        
+        .color-name {
+            font-weight: 600;
+            margin-bottom: var(--stellar-xs);
+        }
+        
+        .color-value {
+            font-size: var(--font-size-sm);
+            color: var(--neutral-slate);
+            font-family: 'Monaco', 'Consolas', monospace;
+        }
+        
+        /* Typography Samples */
+        .type-sample {
+            margin-bottom: var(--stellar-xl);
+            padding: var(--stellar-xl);
+            background: var(--glass-bg);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--glass-border);
+        }
+        
+        .type-label {
+            font-size: var(--font-size-sm);
+            color: var(--neutral-slate);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: var(--stellar-sm);
+        }
+        
+        /* Component Examples */
+        .component-example {
+            padding: var(--stellar-2xl);
+            background: var(--glass-bg);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--glass-border);
+            margin-bottom: var(--stellar-xl);
+        }
+        
+        .component-title {
+            font-size: var(--font-size-lg);
+            font-weight: 600;
+            margin-bottom: var(--stellar-lg);
+            color: var(--constellation-gold);
+        }
+        
+        /* Button System */
+        .btn {
+            padding: var(--stellar-md) var(--stellar-xl);
+            border-radius: var(--radius-md);
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--duration-normal) var(--easing-smooth);
+            display: inline-flex;
+            align-items: center;
+            gap: var(--stellar-sm);
+            text-decoration: none;
+            font-size: var(--font-size-base);
+        }
+        
+        .btn-primary {
+            background: var(--lyra-primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #3a8dff;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-glow);
+        }
+        
+        .btn-secondary {
+            background: var(--lyra-secondary);
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #6d28d9;
+            transform: translateY(-1px);
+        }
+        
+        .btn-ghost {
+            background: transparent;
+            color: var(--lyra-primary);
+            border: 1px solid var(--lyra-primary);
+        }
+        
+        .btn-ghost:hover {
+            background: var(--lyra-primary);
+            color: white;
+        }
+        
+        .btn-danger {
+            background: var(--critical-red);
+            color: white;
+        }
+        
+        .btn-success {
+            background: var(--success-green);
+            color: white;
+        }
+        
+        .btn-warning {
+            background: var(--warning-amber);
+            color: var(--void-black);
+        }
+        
+        /* Card System */
+        .card {
+            background: var(--cosmos-dark);
+            border-radius: var(--radius-lg);
+            padding: var(--stellar-2xl);
+            border: 1px solid var(--nebula-purple);
+            transition: all var(--duration-normal) var(--easing-smooth);
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--lyra-primary);
+        }
+        
+        .card-glow {
+            box-shadow: var(--shadow-glow);
+        }
+        
+        /* Badge System */
+        .badge {
+            padding: var(--stellar-xs) var(--stellar-md);
+            border-radius: var(--radius-pill);
+            font-size: var(--font-size-xs);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .badge-primary { background: var(--lyra-primary); color: white; }
+        .badge-success { background: var(--success-green); color: white; }
+        .badge-warning { background: var(--warning-amber); color: var(--void-black); }
+        .badge-danger { background: var(--critical-red); color: white; }
+        
+        /* Progress System */
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--nebula-purple);
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            border-radius: var(--radius-sm);
+            transition: width var(--duration-slow) var(--easing-smooth);
+        }
+        
+        /* Animation Examples */
+        .animation-demo {
+            width: 60px;
+            height: 60px;
+            border-radius: var(--radius-full);
+            margin: var(--stellar-xl) auto;
+        }
+        
+        .stellar-pulse {
+            background: var(--lyra-primary);
+            animation: stellar-pulse 3s infinite;
+        }
+        
+        .constellation-rotate {
+            background: var(--vega-bright);
+            animation: constellation-rotate 4s linear infinite;
+        }
+        
+        .nebula-float {
+            background: var(--lyra-secondary);
+            animation: nebula-float 2s ease-in-out infinite alternate;
+        }
+        
+        @keyframes stellar-pulse {
+            0%, 100% { 
+                box-shadow: 0 0 20px rgba(74, 158, 255, 0.3);
+                transform: scale(1);
+            }
+            50% { 
+                box-shadow: 0 0 30px rgba(74, 158, 255, 0.6);
+                transform: scale(1.05);
+            }
+        }
+        
+        @keyframes constellation-rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        @keyframes nebula-float {
+            from { transform: translateY(0); }
+            to { transform: translateY(-8px); }
+        }
+        
+        /* Responsive Grid */
+        @media (max-width: 1024px) {
+            .grid-4 { grid-template-columns: repeat(2, 1fr); }
+            .grid-5 { grid-template-columns: repeat(3, 1fr); }
+        }
+        
+        @media (max-width: 768px) {
+            .design-system {
+                padding: var(--stellar-lg);
+            }
+            
+            .grid-2,
+            .grid-3,
+            .grid-4,
+            .grid-5 {
+                grid-template-columns: 1fr;
+            }
+            
+            .section {
+                padding: var(--stellar-xl);
+            }
+        }
+        
+        /* Code Block Styling */
+        .code-block {
+            background: var(--void-black);
+            border: 1px solid var(--nebula-purple);
+            border-radius: var(--radius-md);
+            padding: var(--stellar-xl);
+            margin: var(--stellar-lg) 0;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: var(--font-size-sm);
+            overflow-x: auto;
+            position: relative;
+        }
+        
+        .code-block::before {
+            content: attr(data-lang);
+            position: absolute;
+            top: var(--stellar-sm);
+            right: var(--stellar-sm);
+            font-size: var(--font-size-xs);
+            color: var(--neutral-slate);
+            text-transform: uppercase;
+        }
+        
+        /* Usage Guidelines */
+        .guideline {
+            background: var(--glass-bg);
+            border-left: 3px solid var(--constellation-gold);
+            padding: var(--stellar-lg);
+            margin: var(--stellar-lg) 0;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0;
+        }
+        
+        .do-dont-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--stellar-xl);
+        }
+        
+        .do-card {
+            border: 1px solid var(--success-green);
+            background: rgba(16, 185, 129, 0.1);
+        }
+        
+        .dont-card {
+            border: 1px solid var(--critical-red);
+            background: rgba(239, 68, 68, 0.1);
+        }
+        
+        .do-card::before {
+            content: "✓ DO";
+            color: var(--success-green);
+            font-weight: 700;
+            font-size: var(--font-size-sm);
+        }
+        
+        .dont-card::before {
+            content: "✗ DON'T";
+            color: var(--critical-red);
+            font-weight: 700;
+            font-size: var(--font-size-sm);
+        }
+        
+        .icon-grid {
+            display: flex;
+            gap: var(--stellar-lg);
+            flex-wrap: wrap;
+        }
+        
+        .icon-demo {
+            width: 48px;
+            height: 48px;
+            background: var(--lyra-primary);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            transition: all var(--duration-normal) var(--easing-smooth);
+        }
+        
+        .icon-demo:hover {
+            background: var(--vega-bright);
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="design-system">
+        <!-- Header -->
+        <header style="text-align: center; margin-bottom: var(--stellar-5xl);">
+            <div style="font-size: 64px; margin-bottom: var(--stellar-lg);">🎵</div>
+            <h1 style="font-size: var(--font-size-4xl); font-weight: 800; margin-bottom: var(--stellar-md); background: linear-gradient(135deg, var(--lyra-primary), var(--vega-bright)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                Lyra Design System
+            </h1>
+            <p style="font-size: var(--font-size-xl); color: var(--neutral-light); max-width: 600px; margin: 0 auto;">
+                Celestial Precision Design System for ML Performance Analytics
+            </p>
+            <div style="margin-top: var(--stellar-2xl);">
+                <span class="badge badge-primary">Version 1.0</span>
+                <span class="badge badge-success">Production Ready</span>
+            </div>
+        </header>
+
+        <!-- Brand Identity -->
+        <section class="section">
+            <h2 class="section-title">🌌 Brand Identity</h2>
+            
+            <div class="guideline">
+                <strong>Design Philosophy:</strong> "Celestial Precision" - Where data becomes art and complexity becomes clarity. Our interface should feel like commanding a spaceship - sophisticated, precise, and beautiful.
+            </div>
+
+            <h3 class="section-subtitle">Brand Principles</h3>
+            <div class="grid grid-3">
+                <div class="card">
+                    <h4 style="color: var(--lyra-primary); margin-bottom: var(--stellar-md);">🔭 Celestial Elegance</h4>
+                    <p>Deep space aesthetics with constellation-inspired data visualization</p>
+                </div>
+                <div class="card">
+                    <h4 style="color: var(--vega-bright); margin-bottom: var(--stellar-md);">📊 Hierarchical Clarity</h4>
+                    <p>Executive overview → Research depth → Engineering precision</p>
+                </div>
+                <div class="card">
+                    <h4 style="color: var(--constellation-gold); margin-bottom: var(--stellar-md);">⚡ Performance-First</h4>
+                    <p>The UI itself should be as optimized as the models it analyzes</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Color System -->
+        <section class="section">
+            <h2 class="section-title">🎨 Color System</h2>
+            
+            <h3 class="section-subtitle">Foundation Colors</h3>
+            <div class="grid grid-4">
+                <div class="color-card">
+                    <div class="color-swatch" style="background: var(--void-black);" onclick="copyColor('#0a0a0f')"></div>
+                    <div class="color-name">Void Black</div>
+                    <div class="color-value">#0a0a0f</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: var(--cosmos-dark);" onclick="copyColor('#1a1a2e')"></div>
+                    <div class="color-name">Cosmos Dark</div>
+                    <div class="color-value">#1a1a2e</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: var(--nebula-purple);" onclick="copyColor('#16213e')"></div>
+                    <div class="color-name">Nebula Purple</div>
+                    <div class="color-value">#16213e</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: var(--stellar-blue);" onclick="copyColor('#0f3460')"></div>
+                    <div class="color-name">Stellar Blue</div>
+                    <div class="color-value">#0f3460</div>
+                </div>
+            </div>
+
+            <h3 class="section-subtitle">Brand Colors</h3>
+            <div class="grid grid-4">
+                <div class="color-card">
+                    <div class="color-swatch" style="background: var(--lyra-primary);" onclick="copyColor('#4a9eff')"></div>
+                    <div class="color-name">Lyra Primary</div>
+                    <div class="color-value">#4a9eff</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: var(--lyra-secondary);" onclick="copyColor('#7c3aed')"></div>
+                    <div class="color-name">Lyra Secondary</div>
+                    <div class="color-value">#7c3aed</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: var(--vega-bright);" onclick="copyColor('#00d4ff')"></div>
+                    <div class="color-name">Vega Bright</div>
+                    <div class="color-value">#00d4ff</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: var(--constellation-gold);" onclick="copyColor('#fbbf24')"></div>
+                    <div class="color-name">Constellation Gold</div>
+                    <div class="color-value">#fbbf24</div>
+                </div>
+            </div>
+
+            <h3 class="section-subtitle">Performance Spectrum</h3>
+            <div class="grid grid-4">
+                <div class="color-card">
+                    <div class="color-swatch" style="background: var(--critical-red);" onclick="copyColor('#ef4444')"></div>
+                    <div class="color-name">Critical Red</div>
+                    <div class="color-value">#ef4444</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: var(--warning-amber);" onclick="copyColor('#f59e0b')"></div>
+                    <div class="color-name">Warning Amber</div>
+                    <div class="color-value">#f59e0b</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: var(--success-green);" onclick="copyColor('#10b981')"></div>
+                    <div class="color-name">Success Green</div>
+                    <div class="color-value">#10b981</div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: var(--neutral-slate);" onclick="copyColor('#64748b')"></div>
+                    <div class="color-name">Neutral Slate</div>
+                    <div class="color-value">#64748b</div>
+                </div>
+            </div>
+
+            <div class="code-block" data-lang="CSS">
+:root {
+  /* Foundation */
+  --void-black: #0a0a0f;
+  --cosmos-dark: #1a1a2e;
+  --nebula-purple: #16213e;
+  --stellar-blue: #0f3460;
+  
+  /* Brand */
+  --lyra-primary: #4a9eff;
+  --lyra-secondary: #7c3aed;
+  --vega-bright: #00d4ff;
+  --constellation-gold: #fbbf24;
+  
+  /* Performance */
+  --critical-red: #ef4444;
+  --warning-amber: #f59e0b;
+  --success-green: #10b981;
+  --neutral-slate: #64748b;
+}
+            </div>
+        </section>
+
+        <!-- Typography -->
+        <section class="section">
+            <h2 class="section-title">📝 Typography System</h2>
+            
+            <div class="type-sample">
+                <div class="type-label">Display Large (48px) - Hero Headlines</div>
+                <div style="font-size: var(--font-size-4xl); font-weight: 800; color: var(--lyra-primary);">
+                    Lyra Performance Analytics
+                </div>
+            </div>
+            
+            <div class="type-sample">
+                <div class="type-label">Heading 1 (32px) - Section Titles</div>
+                <h1 style="font-size: var(--font-size-3xl); font-weight: 700; color: var(--vega-bright);">
+                    GPU Performance Analysis
+                </h1>
+            </div>
+            
+            <div class="type-sample">
+                <div class="type-label">Heading 2 (24px) - Subsection Titles</div>
+                <h2 style="font-size: var(--font-size-2xl); font-weight: 600; color: white;">
+                    Memory Optimization Results
+                </h2>
+            </div>
+            
+            <div class="type-sample">
+                <div class="type-label">Body Large (16px) - Primary Content</div>
+                <p style="font-size: var(--font-size-lg); color: var(--neutral-light);">
+                    Your training script has been optimized with mixed precision, resulting in 3.2x faster performance and 42% memory reduction.
+                </p>
+            </div>
+            
+            <div class="type-sample">
+                <div class="type-label">Body (14px) - Default Text</div>
+                <p style="font-size: var(--font-size-base); color: white;">
+                    This is the default body text used throughout the interface for most content and descriptions.
+                </p>
+            </div>
+            
+            <div class="type-sample">
+                <div class="type-label">Caption (12px) - Secondary Information</div>
+                <p style="font-size: var(--font-size-sm); color: var(--neutral-slate);">
+                    Updated 2 minutes ago • Confidence: 94% • Impact: High
+                </p>
+            </div>
+
+            <div class="code-block" data-lang="CSS">
+/* Typography Scale */
+--font-size-xs: 10px;    /* Labels, badges */
+--font-size-sm: 12px;    /* Captions, metadata */
+--font-size-base: 14px;  /* Body text */
+--font-size-lg: 16px;    /* Prominent body */
+--font-size-xl: 18px;    /* Small headings */
+--font-size-2xl: 24px;   /* Section headings */
+--font-size-3xl: 32px;   /* Page headings */
+--font-size-4xl: 48px;   /* Display text */
+
+/* Font Weights */
+font-weight: 400; /* Regular */
+font-weight: 500; /* Medium */
+font-weight: 600; /* Semibold */
+font-weight: 700; /* Bold */
+font-weight: 800; /* Extrabold */
+            </div>
+        </section>
+
+        <!-- Spacing System -->
+        <section class="section">
+            <h2 class="section-title">📏 Spacing System</h2>
+            
+            <p style="margin-bottom: var(--stellar-xl); color: var(--neutral-light);">
+                Our spacing system uses "stellar units" that scale harmoniously across the interface.
+            </p>
+
+            <div class="grid grid-auto">
+                <div style="text-align: center;">
+                    <div style="width: 4px; height: 4px; background: var(--lyra-primary); margin: 0 auto var(--stellar-sm);"></div>
+                    <div style="font-weight: 600;">XS</div>
+                    <div style="font-size: var(--font-size-sm); color: var(--neutral-slate);">4px</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="width: 8px; height: 8px; background: var(--lyra-primary); margin: 0 auto var(--stellar-sm);"></div>
+                    <div style="font-weight: 600;">SM</div>
+                    <div style="font-size: var(--font-size-sm); color: var(--neutral-slate);">8px</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="width: 12px; height: 12px; background: var(--lyra-primary); margin: 0 auto var(--stellar-sm);"></div>
+                    <div style="font-weight: 600;">MD</div>
+                    <div style="font-size: var(--font-size-sm); color: var(--neutral-slate);">12px</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="width: 16px; height: 16px; background: var(--lyra-primary); margin: 0 auto var(--stellar-sm);"></div>
+                    <div style="font-weight: 600;">LG</div>
+                    <div style="font-size: var(--font-size-sm); color: var(--neutral-slate);">16px</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="width: 20px; height: 20px; background: var(--lyra-primary); margin: 0 auto var(--stellar-sm);"></div>
+                    <div style="font-weight: 600;">XL</div>
+                    <div style="font-size: var(--font-size-sm); color: var(--neutral-slate);">20px</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="width: 24px; height: 24px; background: var(--lyra-primary); margin: 0 auto var(--stellar-sm);"></div>
+                    <div style="font-weight: 600;">2XL</div>
+                    <div style="font-size: var(--font-size-sm); color: var(--neutral-slate);">24px</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="width: 32px; height: 32px; background: var(--lyra-primary); margin: 0 auto var(--stellar-sm);"></div>
+                    <div style="font-weight: 600;">3XL</div>
+                    <div style="font-size: var(--font-size-sm); color: var(--neutral-slate);">32px</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="width: 48px; height: 48px; background: var(--lyra-primary); margin: 0 auto var(--stellar-sm);"></div>
+                    <div style="font-weight: 600;">4XL</div>
+                    <div style="font-size: var(--font-size-sm); color: var(--neutral-slate);">48px</div>
+                </div>
+            </div>
+
+            <div class="code-block" data-lang="CSS">
+/* Stellar Spacing Units */
+--stellar-xs: 4px;    /* Tight spacing */
+--stellar-sm: 8px;    /* Small gaps */
+--stellar-md: 12px;   /* Default spacing */
+--stellar-lg: 16px;   /* Component spacing */
+--stellar-xl: 20px;   /* Section spacing */
+--stellar-2xl: 24px;  /* Card padding */
+--stellar-3xl: 32px;  /* Major spacing */
+--stellar-4xl: 48px;  /* Layout spacing */
+--stellar-5xl: 64px;  /* Section margins */
+            </div>
+        </section>
+
+        <!-- Component Library -->
+        <section class="section">
+            <h2 class="section-title">🧩 Component Library</h2>
+
+            <h3 class="section-subtitle">Buttons</h3>
+            <div class="component-example">
+                <div class="component-title">Button Variants</div>
+                <div style="display: flex; gap: var(--stellar-lg); flex-wrap: wrap; margin-bottom: var(--stellar-xl);">
+                    <button class="btn btn-primary">Primary Action</button>
+                    <button class="btn btn-secondary">Secondary</button>
+                    <button class="btn btn-ghost">Ghost Button</button>
+                    <button class="btn btn-success">✓ Success</button>
+                    <button class="btn btn-warning">⚠ Warning</button>
+                    <button class="btn btn-danger">✗ Danger</button>
+                </div>
+                
+                <div class="code-block" data-lang="HTML">
+&lt;button class="btn btn-primary"&gt;Primary Action&lt;/button&gt;
+&lt;button class="btn btn-secondary"&gt;Secondary&lt;/button&gt;
+&lt;button class="btn btn-ghost"&gt;Ghost Button&lt;/button&gt;
+                </div>
+            </div>
+
+            <h3 class="section-subtitle">Cards</h3>
+            <div class="component-example">
+                <div class="component-title">Card System</div>
+                <div class="grid grid-3">
+                    <div class="card">
+                        <h4 style="margin-bottom: var(--stellar-md); color: var(--lyra-primary);">Basic Card</h4>
+                        <p style="color: var(--neutral-light);">Standard card with default styling and hover effects.</p>
+                    </div>
+                    <div class="card card-hover">
+                        <h4 style="margin-bottom: var(--stellar-md); color: var(--vega-bright);">Hover Card</h4>
+                        <p style="color: var(--neutral-light);">Card with enhanced hover animations and lift effects.</p>
+                    </div>
+                    <div class="card card-glow">
+                        <h4 style="margin-bottom: var(--stellar-md); color: var(--constellation-gold);">Glow Card</h4>
+                        <p style="color: var(--neutral-light);">Special card with stellar glow effects for emphasis.</p>
+                    </div>
+                </div>
+                
+                <div class="code-block" data-lang="HTML">
+&lt;div class="card"&gt;Basic Card&lt;/div&gt;
+&lt;div class="card card-hover"&gt;Hover Card&lt;/div&gt;
+&lt;div class="card card-glow"&gt;Glow Card&lt;/div&gt;
+                </div>
+            </div>
+
+            <h3 class="section-subtitle">Badges & Status Indicators</h3>
+            <div class="component-example">
+                <div class="component-title">Status System</div>
+                <div style="display: flex; gap: var(--stellar-lg); flex-wrap: wrap; margin-bottom: var(--stellar-xl);">
+                    <span class="badge badge-primary">Primary</span>
+                    <span class="badge badge-success">Active</span>
+                    <span class="badge badge-warning">Pending</span>
+                    <span class="badge badge-danger">Critical</span>
+                </div>
+                
+                <div class="code-block" data-lang="HTML">
+&lt;span class="badge badge-success"&gt;Active&lt;/span&gt;
+&lt;span class="badge badge-warning"&gt;Pending&lt;/span&gt;
+&lt;span class="badge badge-danger"&gt;Critical&lt;/span&gt;
+                </div>
+            </div>
+
+            <h3 class="section-subtitle">Progress Indicators</h3>
+            <div class="component-example">
+                <div class="component-title">Progress System</div>
+                <div style="margin-bottom: var(--stellar-xl);">
+                    <div style="margin-bottom: var(--stellar-sm); color: var(--neutral-light);">GPU Utilization - 87%</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 87%; background: var(--success-green);"></div>
+                    </div>
+                </div>
+                <div style="margin-bottom: var(--stellar-xl);">
+                    <div style="margin-bottom: var(--stellar-sm); color: var(--neutral-light);">Memory Usage - 64%</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 64%; background: var(--vega-bright);"></div>
+                    </div>
+                </div>
+                <div>
+                    <div style="margin-bottom: var(--stellar-sm); color: var(--neutral-light);">Training Progress - 34%</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 34%; background: var(--constellation-gold);"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Animation System -->
+        <section class="section">
+            <h2 class="section-title">✨ Animation System</h2>
+
+            <div class="component-example">
+                <div class="component-title">Stellar Animations</div>
+                <div class="grid grid-3">
+                    <div style="text-align: center;">
+                        <div class="animation-demo stellar-pulse"></div>
+                        <h4 style="margin: var(--stellar-lg) 0 var(--stellar-sm); color: var(--lyra-primary);">Stellar Pulse</h4>
+                        <p style="font-size: var(--font-size-sm); color: var(--neutral-slate);">For active states and attention</p>
+                    </div>
+                    <div style="text-align: center;">
+                        <div class="animation-demo constellation-rotate"></div>
+                        <h4 style="margin: var(--stellar-lg) 0 var(--stellar-sm); color: var(--vega-bright);">Constellation Rotate</h4>
+                        <p style="font-size: var(--font-size-sm); color: var(--neutral-slate);">For loading states</p>
+                    </div>
+                    <div style="text-align: center;">
+                        <div class="animation-demo nebula-float"></div>
+                        <h4 style="margin: var(--stellar-lg) 0 var(--stellar-sm); color: var(--lyra-secondary);">Nebula Float</h4>
+                        <p style="font-size: var(--font-size-sm); color: var(--neutral-slate);">For subtle movement</p>
+                    </div>
+                </div>
+
+                <div class="code-block" data-lang="CSS">
+/* Animation Timing */
+--duration-fast: 0.15s;   /* Quick interactions */
+--duration-normal: 0.3s;  /* Standard transitions */
+--duration-slow: 0.5s;    /* Complex animations */
+
+/* Easing Functions */
+--easing-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+--easing-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+/* Stellar Pulse Animation */
+@keyframes stellar-pulse {
+  0%, 100% { 
+    box-shadow: 0 0 20px rgba(74, 158, 255, 0.3);
+    transform: scale(1);
+  }
+  50% { 
+    box-shadow: 0 0 30px rgba(74, 158, 255, 0.6);
+    transform: scale(1.05);
+  }
+}
+                </div>
+            </div>
+        </section>
+
+        <!-- Icon System -->
+        <section class="section">
+            <h2 class="section-title">🔮 Icon System</h2>
+
+            <div class="component-example">
+                <div class="component-title">Constellation Icons</div>
+                <p style="margin-bottom: var(--stellar-xl); color: var(--neutral-light);">
+                    Use constellation and space-themed icons throughout the interface to maintain thematic consistency.
+                </p>
+                
+                <div class="icon-grid">
+                    <div class="icon-demo">🎵</div>
+                    <div class="icon-demo">⚡</div>
+                    <div class="icon-demo">🚀</div>
+                    <div class="icon-demo">📊</div>
+                    <div class="icon-demo">🔍</div>
+                    <div class="icon-demo">⭐</div>
+                    <div class="icon-demo">🌌</div>
+                    <div class="icon-demo">🛸</div>
+                    <div class="icon-demo">🔮</div>
+                    <div class="icon-demo">💫</div>
+                </div>
+
+                <div style="margin-top: var(--stellar-xl);">
+                    <strong>Icon Guidelines:</strong>
+                    <ul style="margin-top: var(--stellar-md); padding-left: var(--stellar-xl); color: var(--neutral-light);">
+                        <li>🎵 - Lyra agent signature</li>
+                        <li>⚡ - Performance and speed</li>
+                        <li>🚀 - Improvements and optimization</li>
+                        <li>📊 - Analytics and data</li>
+                        <li>🔍 - Analysis and profiling</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Usage Guidelines -->
+        <section class="section">
+            <h2 class="section-title">📋 Usage Guidelines</h2>
+
+            <h3 class="section-subtitle">Color Usage</h3>
+            <div class="do-dont-grid">
+                <div class="card do-card" style="padding: var(--stellar-xl);">
+                    <h4 style="margin: var(--stellar-md) 0;">Color Semantics</h4>
+                    <ul style="padding-left: var(--stellar-xl); color: var(--neutral-light);">
+                        <li>Use success-green for positive metrics</li>
+                        <li>Use critical-red sparingly for urgent issues</li>
+                        <li>Use lyra-primary for interactive elements</li>
+                        <li>Use neutral-slate for secondary text</li>
+                    </ul>
+                </div>
+                <div class="card dont-card" style="padding: var(--stellar-xl);">
+                    <h4 style="margin: var(--stellar-md) 0;">Avoid</h4>
+                    <ul style="padding-left: var(--stellar-xl); color: var(--neutral-light);">
+                        <li>Don't use red for non-critical issues</li>
+                        <li>Don't mix warm and cool colors randomly</li>
+                        <li>Don't use low contrast combinations</li>
+                        <li>Don't overuse bright accent colors</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h3 class="section-subtitle">Animation Guidelines</h3>
+            <div class="guideline">
+                <strong>Performance First:</strong> All animations should enhance usability without impacting performance. Use CSS transforms and opacity for optimal rendering.
+            </div>
+
+            <h3 class="section-subtitle">Responsive Behavior</h3>
+            <div class="code-block" data-lang="CSS">
+/* Breakpoint System */
+@media (max-width: 1440px) { /* Large Desktop */ }
+@media (max-width: 1024px) { /* Desktop/Tablet */ }
+@media (max-width: 768px)  { /* Tablet */ }
+@media (max-width: 480px)  { /* Mobile */ }
+
+/* Grid Adaptation */
+.grid-4 { grid-template-columns: repeat(4, 1fr); }
+
+@media (max-width: 1024px) {
+  .grid-4 { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 768px) {
+  .grid-4 { grid-template-columns: 1fr; }
+}
+            </div>
+        </section>
+
+        <!-- Implementation -->
+        <section class="section">
+            <h2 class="section-title">⚙️ Implementation</h2>
+
+            <h3 class="section-subtitle">CSS Custom Properties</h3>
+            <div class="code-block" data-lang="CSS">
+/* Import this CSS file in your project */
+@import url('lyra-design-system.css');
+
+/* Or use CSS custom properties directly */
+.my-component {
+  background: var(--cosmos-dark);
+  color: var(--lyra-primary);
+  padding: var(--stellar-xl);
+  border-radius: var(--radius-lg);
+  transition: all var(--duration-normal) var(--easing-smooth);
+}
+
+.my-component:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-glow);
+}
+            </div>
+
+            <h3 class="section-subtitle">Component Classes</h3>
+            <div class="code-block" data-lang="HTML">
+&lt;!-- Use predefined component classes --&gt;
+&lt;div class="card card-hover"&gt;
+  &lt;h3 class="section-title"&gt;Performance Metrics&lt;/h3&gt;
+  &lt;button class="btn btn-primary"&gt;Optimize Now&lt;/button&gt;
+  &lt;span class="badge badge-success"&gt;Active&lt;/span&gt;
+&lt;/div&gt;
+
+&lt;!-- Constellation grid layout --&gt;
+&lt;div class="grid grid-3"&gt;
+  &lt;div class="card"&gt;Card 1&lt;/div&gt;
+  &lt;div class="card"&gt;Card 2&lt;/div&gt;
+  &lt;div class="card"&gt;Card 3&lt;/div&gt;
+&lt;/div&gt;
+            </div>
+
+            <h3 class="section-subtitle">JavaScript Integration</h3>
+            <div class="code-block" data-lang="JavaScript">
+// Add stellar animations dynamically
+function addStellarPulse(element) {
+  element.style.animation = 'stellar-pulse 3s infinite';
+}
+
+// Theme switching support
+function setTheme(themeName) {
+  document.documentElement.setAttribute('data-theme', themeName);
+}
+
+// Progress bar updates
+function updateProgress(element, percentage) {
+  const fill = element.querySelector('.progress-fill');
+  fill.style.width = `${percentage}%`;
+}
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer style="text-align: center; margin-top: var(--stellar-5xl); padding-top: var(--stellar-3xl); border-top: 1px solid var(--nebula-purple);">
+            <div style="font-size: 48px; margin-bottom: var(--stellar-lg);">🎵</div>
+            <p style="color: var(--neutral-slate); margin-bottom: var(--stellar-md);">
+                Lyra Design System v1.0 - Built for ML Performance Analytics
+            </p>
+            <p style="font-size: var(--font-size-sm); color: var(--neutral-slate);">
+                Created with Celestial Precision • Updated for Production Use
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        function copyColor(color) {
+            navigator.clipboard.writeText(color).then(() => {
+                // Show temporary feedback
+                const notification = document.createElement('div');
+                notification.textContent = `Copied ${color}`;
+                notification.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background: var(--success-green);
+                    color: white;
+                    padding: 12px 20px;
+                    border-radius: var(--radius-md);
+                    font-weight: 600;
+                    z-index: 1000;
+                    animation: fadeInOut 2s ease-in-out;
+                `;
+                
+                document.body.appendChild(notification);
+                
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 2000);
+            });
+        }
+
+        // Add fade in/out animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeInOut {
+                0% { opacity: 0; transform: translateY(-10px); }
+                20%, 80% { opacity: 1; transform: translateY(0); }
+                100% { opacity: 0; transform: translateY(-10px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
