@@ -1,0 +1,1 @@
+Write some code to visualize the results in $ANALYSIS_FILE. Make sure all bar charts are sorted by height, as this looks visually most pleasing.

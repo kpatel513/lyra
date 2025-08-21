@@ -1,0 +1,1 @@
+Implement the top suggestions from the analysis document $ARGUMENTS in the training code and rerun the profiling step, saving the profiler output as a separate file. Compare performance from before and after these changes with quantitative metrics. The most important factor is the data throughput, which dictates the overall speedup in training time.
