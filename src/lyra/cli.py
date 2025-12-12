@@ -20,7 +20,7 @@ import sys
 from pathlib import Path
 
 from . import __version__
-from .core import summarize_repo
+from .core import analyze_repo, summarize_repo
 
 
 def _add_common_repo_argument(parser: argparse.ArgumentParser) -> None:
@@ -112,13 +112,8 @@ def cmd_summarize(args: argparse.Namespace) -> int:
 
 def cmd_analyze(args: argparse.Namespace) -> int:
     repo = _resolve_repo_path(args.repo_path)
-    print(
-        f"🎵 Lyra (analyze)\n"
-        f"- Repository: {repo}\n"
-        "\n"
-        "This is the Python CLI scaffold. Performance analysis and bottleneck\n"
-        "detection will be implemented here."
-    )
+    report = analyze_repo(repo)
+    print(report.format_human())
     return 0
 
 
