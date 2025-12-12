@@ -20,7 +20,7 @@ import sys
 from pathlib import Path
 
 from . import __version__
-from .core import analyze_repo, summarize_repo
+from .core import analyze_repo, run_safe_profile, summarize_repo
 
 
 def _add_common_repo_argument(parser: argparse.ArgumentParser) -> None:
@@ -81,6 +81,12 @@ def _build_parser() -> argparse.ArgumentParser:
         nargs="?",
         help="Optional training script to run (e.g. train.py). If omitted, Lyra will auto-detect later.",
     )
+    profile.add_argument(
+        "--max-steps",
+        type=int,
+        default=100,
+        help="Maximum number of training steps to allow during safe profiling (default: 100).",
+    )
 
     # lyra setup
     setup = subparsers.add_parser(
@@ -119,16 +125,13 @@ def cmd_analyze(args: argparse.Namespace) -> int:
 
 def cmd_profile(args: argparse.Namespace) -> int:
     repo = _resolve_repo_path(args.repo_path)
-    training_script = args.training_script or "<auto-detect>"
-    print(
-        f"🎵 Lyra (profile)\n"
-        f"- Repository: {repo}\n"
-        f"- Training script: {training_script}\n"
-        "\n"
-        "This is the Python CLI scaffold. Safe profiling, temporary code\n"
-        "patching, and trace generation will be implemented here."
+    result = run_safe_profile(
+        root=repo,
+        training_script=args.training_script,
+        max_steps=args.max_steps,
     )
-    return 0
+    print(result.format_human())
+    return result.return_code
 
 
 def cmd_setup(args: argparse.Namespace) -> int:

@@ -9,7 +9,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, Iterable, List
+from typing import Dict, Iterable, List, Optional
+import os
+import subprocess
+from datetime import datetime
 
 
 PYTHON_EXTENSIONS = {".py", ".pyw"}
@@ -312,5 +315,103 @@ def analyze_repo(root: Path) -> AnalysisReport:
         root=summary.root,
         training_scripts=summary.training_scripts,
         findings=findings,
+    )
+
+
+# --- Safe profiling ---------------------------------------------------------
+
+
+@dataclass
+class ProfileResult:
+    root: Path
+    script: Path
+    command: List[str]
+    log_file: Path
+    return_code: int
+
+    def format_human(self) -> str:
+        status = "✅ Completed" if self.return_code == 0 else f"⚠️ Exit code {self.return_code}"
+        return (
+            "🎵 Lyra Safe Profiling Run\n"
+            f"✨ Root: {self.root}\n"
+            f"🎯 Script: {self.script}\n"
+            f"📝 Log file: {self.log_file}\n"
+            f"🚀 Status: {status}\n"
+        )
+
+
+def _select_training_script(root: Path, explicit: Optional[str]) -> Path:
+    root = root.resolve()
+    if explicit:
+        script_path = Path(explicit)
+        if not script_path.is_absolute():
+            script_path = root / script_path
+        script_path = script_path.resolve()
+        if not script_path.exists():
+            raise FileNotFoundError(f"Training script not found: {script_path}")
+        return script_path
+
+    summary = summarize_repo(root)
+    if not summary.training_scripts:
+        raise RuntimeError(
+            "Could not auto-detect a training script. "
+            "Pass one explicitly, e.g. `lyra profile REPO_PATH train.py`."
+        )
+    # Pick the first candidate deterministically.
+    return summary.training_scripts[0].resolve()
+
+
+def run_safe_profile(
+    root: Path,
+    training_script: Optional[str] = None,
+    max_steps: int = 100,
+    log_dir: Optional[Path] = None,
+) -> ProfileResult:
+    """
+    Run the training script in a best-effort "safe profiling" mode:
+    - selects a training script (auto or explicit)
+    - sets env vars signalling safe mode and step cap
+    - captures stdout/stderr to a log file for later analysis
+
+    NOTE: The training code needs to *honour* these env vars for strict
+    safety guarantees. Lyra does not rewrite the user's code yet.
+    """
+    root = root.resolve()
+    script_path = _select_training_script(root, training_script)
+
+    # Determine where to put logs.
+    if log_dir is None:
+        log_dir = root / ".lyra" / "profiles"
+    log_dir.mkdir(parents=True, exist_ok=True)
+
+    timestamp = datetime.utcnow().strftime("%Y%m%d-%H%M%S")
+    log_file = log_dir / f"profile_{script_path.stem}_{timestamp}.log"
+
+    python_exe = os.environ.get("PYTHON", os.sys.executable)
+    cmd = [python_exe, str(script_path)]
+
+    # Best-effort safe mode signalling. The actual training script must
+    # look at these to reduce steps / disable saving.
+    env = os.environ.copy()
+    env.setdefault("LYRA_SAFE_PROFILE", "1")
+    env.setdefault("LYRA_MAX_STEPS", str(max_steps))
+    env.setdefault("LYRA_DISABLE_SAVING", "1")
+
+    with log_file.open("w", encoding="utf-8") as fh:
+        process = subprocess.run(
+            cmd,
+            cwd=root,
+            env=env,
+            stdout=fh,
+            stderr=subprocess.STDOUT,
+            text=True,
+        )
+
+    return ProfileResult(
+        root=root,
+        script=script_path,
+        command=cmd,
+        log_file=log_file,
+        return_code=process.returncode,
     )
 
