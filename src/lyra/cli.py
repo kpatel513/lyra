@@ -20,6 +20,7 @@ import sys
 from pathlib import Path
 
 from . import __version__
+from .core import summarize_repo
 
 
 def _add_common_repo_argument(parser: argparse.ArgumentParser) -> None:
@@ -104,13 +105,8 @@ def _resolve_repo_path(raw: str) -> Path:
 
 def cmd_summarize(args: argparse.Namespace) -> int:
     repo = _resolve_repo_path(args.repo_path)
-    print(
-        f"🎵 Lyra (summarize)\n"
-        f"- Repository: {repo}\n"
-        "\n"
-        "This is the Python CLI scaffold. Repository analysis logic will be\n"
-        "implemented here by invoking the Lyra agent and Claude-based tooling."
-    )
+    summary = summarize_repo(repo)
+    print(summary.format_human())
     return 0
 
 
