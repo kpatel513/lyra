@@ -1,0 +1,8 @@
+# Runtime dependencies for the Lyra Python agent.
+#
+# At the moment the CLI only uses the Python standard library.
+# Add libraries here as the agent implementation grows, for example:
+# rich>=13.0.0        # for rich terminal output
+# pydantic>=2.0.0     # for structured configs
+
+
