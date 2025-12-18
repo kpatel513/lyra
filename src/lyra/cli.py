@@ -16,19 +16,28 @@ points without changing the public CLI surface.
 from __future__ import annotations
 
 import argparse
-import json
 import sys
 from pathlib import Path
+from typing import List, Optional
 
 from . import __version__
-from .core import analyze_repo, run_safe_profile, summarize_repo
-from .check import run_check
-from .llm import ClaudeCodeRunner
-from .metrics import parse_profile_log
-from .optimize import optimize_repo
-from .prompts import load_prompt, resolve_prompt
-from .setup_env import detect_repo_deps, setup_conda, setup_venv
-from .history import list_history, undo_history
+from .commands.analyze_cmd import cmd_analyze
+from .commands.check_cmd import cmd_check
+from .commands.llm_cmd import (
+    cmd_llm_analyze,
+    cmd_llm_optimize,
+    cmd_llm_profile,
+    cmd_llm_run,
+)
+from .commands.optimize_cmd import cmd_optimize
+from .commands.profile_cmd import cmd_profile
+from .commands.setup_cmd import cmd_setup
+from .commands.summarize_cmd import cmd_summarize
+from .commands.undo_cmd import (
+    cmd_undo_apply,
+    cmd_undo_last,
+    cmd_undo_list,
+)
 
 
 def _add_common_repo_argument(parser: argparse.ArgumentParser) -> None:
@@ -433,298 +442,12 @@ def _build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _resolve_repo_path(raw: str) -> Path:
-    path = Path(raw).expanduser().resolve()
-    return path
-
-
-def _write_output_if_requested(text: str, output: str | None) -> None:
-    if not output:
-        return
-    out_path = Path(output).expanduser().resolve()
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    out_path.write_text(text, encoding="utf-8")
-    print(f"Wrote report to: {out_path}")
-
-
-def cmd_summarize(args: argparse.Namespace) -> int:
-    repo = _resolve_repo_path(args.repo_path)
-    if not repo.exists():
-        print(f"Error: repo_path does not exist: {repo}", file=sys.stderr)
-        return 2
-
-    summary = summarize_repo(repo)
-    if args.output_format == "json":
-        payload = summary.to_dict()
-        text = json.dumps(payload, indent=2, sort_keys=True)
-        print(text)
-        _write_output_if_requested(text + "\n", args.output)
-    else:
-        text = summary.format_human()
-        print(text)
-        _write_output_if_requested(text, args.output)
-    return 0
-
-
-def cmd_analyze(args: argparse.Namespace) -> int:
-    repo = _resolve_repo_path(args.repo_path)
-    if not repo.exists():
-        print(f"Error: repo_path does not exist: {repo}", file=sys.stderr)
-        return 2
-
-    report = analyze_repo(repo, scan_all_python_files=args.scan_all, engine=args.engine)
-    if args.output_format == "json":
-        payload = report.to_dict()
-        text = json.dumps(payload, indent=2, sort_keys=True)
-        print(text)
-        _write_output_if_requested(text + "\n", args.output)
-    else:
-        text = report.format_human()
-        print(text)
-        _write_output_if_requested(text, args.output)
-    return 0
-
-
-def cmd_profile(args: argparse.Namespace) -> int:
-    repo = _resolve_repo_path(args.repo_path)
-    if not repo.exists():
-        print(f"Error: repo_path does not exist: {repo}", file=sys.stderr)
-        return 2
-
-    try:
-        result = run_safe_profile(
-            root=repo,
-            training_script=args.training_script,
-            max_steps=args.max_steps,
-            python_executable=args.python_executable,
-            isolated=args.isolated,
-            runs_root=Path(args.runs_root).expanduser().resolve() if args.runs_root else None,
-        )
-    except (FileNotFoundError, RuntimeError) as e:
-        print(f"Error: {e}", file=sys.stderr)
-        return 2
-
-    if args.output_format == "json":
-        metrics = parse_profile_log(result.log_file).to_dict()
-        payload = {"profile": result.to_dict(), "metrics": metrics}
-        print(json.dumps(payload, indent=2, sort_keys=True))
-    else:
-        print(result.format_human())
-    return result.return_code
-
-
-def _llm_execute(
-    *,
-    repo: Path,
-    prompt: str,
-    arguments: str,
-    training_script: str,
-    output_format: str,
-    output: str | None,
-) -> int:
-    if not repo.exists():
-        print(f"Error: --repo does not exist: {repo}", file=sys.stderr)
-        return 2
-
-    # Resolve and render prompt
-    project_root = Path(__file__).resolve().parents[2]
-    prompt_path = resolve_prompt(project_root, prompt)
-    if not prompt_path.exists():
-        print(f"Error: prompt not found: {prompt_path}", file=sys.stderr)
-        return 2
-
-    spec = load_prompt(prompt_path)
-    rendered = spec.render(
-        {
-            "ARGUMENTS": arguments,
-            "TRAINING_SCRIPT": training_script,
-        }
-    ).strip()
-
-    runner = ClaudeCodeRunner()
-    if not runner.is_available():
-        print("Error: Claude Code CLI not found (expected `claude` in PATH).", file=sys.stderr)
-        return 2
-
-    result = runner.run(
-        prompt=rendered,
-        cwd=repo,
-        extra_args=spec.cli_args,
-        output_format=output_format,
-    )
-
-    # Surface stderr if any (Claude sometimes uses stderr for warnings)
-    if result.stderr.strip():
-        print(result.stderr, file=sys.stderr)
-
-    print(result.stdout)
-    _write_output_if_requested(result.stdout, output)
-    return result.return_code
-
-
-def cmd_llm_run(args: argparse.Namespace) -> int:
-    return _llm_execute(
-        repo=_resolve_repo_path(args.repo),
-        prompt=args.prompt,
-        arguments=args.arguments,
-        training_script=args.training_script,
-        output_format=args.output_format,
-        output=args.output,
-    )
-
-
-def cmd_llm_analyze(args: argparse.Namespace) -> int:
-    return _llm_execute(
-        repo=_resolve_repo_path(args.repo),
-        prompt="lyraAnalyze",
-        arguments=args.profile_file,
-        training_script="",
-        output_format=args.output_format,
-        output=args.output,
-    )
-
-
-def cmd_llm_profile(args: argparse.Namespace) -> int:
-    arguments = args.arguments or args.training_script
-    return _llm_execute(
-        repo=_resolve_repo_path(args.repo),
-        prompt="lyraProfile",
-        arguments=arguments,
-        training_script=args.training_script,
-        output_format=args.output_format,
-        output=args.output,
-    )
-
-
-def cmd_llm_optimize(args: argparse.Namespace) -> int:
-    return _llm_execute(
-        repo=_resolve_repo_path(args.repo),
-        prompt="lyraOptimize",
-        arguments=args.analysis_file,
-        training_script="",
-        output_format=args.output_format,
-        output=args.output,
-    )
-
-
-def cmd_setup(args: argparse.Namespace) -> int:
-    repo = _resolve_repo_path(args.repo_path)
-    if not repo.exists():
-        print(f"Error: repo_path does not exist: {repo}", file=sys.stderr)
-        return 2
-
-    deps = detect_repo_deps(repo)
-    env_name = args.environment_name or f"lyra-{repo.name}"
-
-    if args.prefer == "conda":
-        env_file = deps.get("environment.yml") or deps.get("environment.yaml")
-        if not env_file:
-            print("No environment.yml found; falling back to venv.", file=sys.stderr)
-        else:
-            result = setup_conda(
-                repo=repo,
-                env_name=env_name,
-                env_file=env_file,
-                install=not args.skip_install,
-            )
-            print(result.format_human())
-            return 0 if result.installed or args.skip_install else 2
-
-    python_exe = args.python_executable or sys.executable
-    venv_dir = Path(args.venv_dir).expanduser() if args.venv_dir else (repo / ".venv")
-    requirements_file = (
-        Path(args.requirements).expanduser().resolve()
-        if args.requirements
-        else deps.get("requirements.txt")
-    )
-
-    result = setup_venv(
-        repo=repo,
-        venv_dir=venv_dir,
-        python_executable=python_exe,
-        install=not args.skip_install,
-        requirements_file=requirements_file,
-    )
-    print(result.format_human())
-    return 0 if result.env_path else 2
-
-
-def cmd_check(args: argparse.Namespace) -> int:
-    repo = _resolve_repo_path(args.repo) if args.repo else None
-    report = run_check(repo=repo)
-    if args.output_format == "json":
-        payload = {
-            "ok": report.ok,
-            "items": [i.__dict__ for i in report.items],
-        }
-        print(json.dumps(payload, indent=2, sort_keys=True))
-    else:
-        print(report.format_human())
-    return 0 if report.ok else 2
-
-
-def cmd_optimize(args: argparse.Namespace) -> int:
-    repo = _resolve_repo_path(args.repo_path)
-    if not repo.exists():
-        print(f"Error: repo_path does not exist: {repo}", file=sys.stderr)
-        return 2
-
-    project_root = Path(__file__).resolve().parents[2]
-    try:
-        report = optimize_repo(
-            repo=repo,
-            training_script=args.training_script,
-            max_steps=args.max_steps,
-            apply=args.apply,
-            plan=args.plan,
-            yes=args.yes,
-            project_root=project_root,
-        )
-    except RuntimeError as e:
-        print(f"Error: {e}", file=sys.stderr)
-        return 2
-    except ValueError as e:
-        print(f"Error: {e}", file=sys.stderr)
-        return 2
-
-    if args.output_format == "json":
-        text = json.dumps(report.to_dict(), indent=2, sort_keys=True)
-        print(text)
-        _write_output_if_requested(text + "\n", args.output)
-    else:
-        lines = [
-            "Lyra optimize",
-            f"- repo: {report.repo}",
-            f"- mode: {report.mode}",
-            f"- before log: {report.before['profile']['log_file']}",
-        ]
-        if report.after:
-            lines.append(f"- after log: {report.after['profile']['log_file']}")
-        if report.diff:
-            d = report.diff
-            lines.append(
-                f"- duration_s: {d['duration_s']['before']} -> {d['duration_s']['after']} (Δ {d['duration_s']['delta']})"
-            )
-            lines.append(
-                f"- exit_reason: {d['exit_reason']['before']} -> {d['exit_reason']['after']}"
-            )
-        if report.analysis_output:
-            lines.append(f"- analysis output: {report.analysis_output}")
-        if report.optimize_output:
-            lines.append(f"- optimize output: {report.optimize_output}")
-        if report.history_run_id:
-            lines.append(f"- undo id: {report.history_run_id}")
-        text = "\n".join(lines) + "\n"
-        print(text)
-        _write_output_if_requested(text, args.output)
-
-    return 0
-
-
-def main(argv: list[str] | None = None) -> int:
+def main(argv: Optional[List[str]] = None) -> int:
     """Entry point for the ``lyra`` command."""
     parser = _build_parser()
     args = parser.parse_args(argv)
+
+    project_root = Path(__file__).resolve().parents[2]
 
     if args.command == "summarize":
         return cmd_summarize(args)
@@ -737,54 +460,25 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "check":
         return cmd_check(args)
     if args.command == "optimize":
-        return cmd_optimize(args)
+        return cmd_optimize(args, project_root=project_root)
     if args.command == "undo":
-        repo = _resolve_repo_path(args.repo)
         if args.undo_command == "list":
-            items = list_history(repo)
-            print(json.dumps(items, indent=2, sort_keys=True))
-            return 0
+            return cmd_undo_list(args)
         if args.undo_command == "last":
-            items = list_history(repo)
-            if not items:
-                print("No history entries found.", file=sys.stderr)
-                return 2
-            run_id = items[0].get("run_id")
-            if not run_id:
-                print("History metadata missing run_id.", file=sys.stderr)
-                return 2
-            try:
-                summary = undo_history(repo=repo, run_id=run_id, force=args.force)
-            except RuntimeError as e:
-                print(f"Error: {e}", file=sys.stderr)
-                return 2
-            print(f"Reverted snapshot: {run_id}")
-            print(
-                f"Restored: {len(summary['restored'])} | Removed: {len(summary['removed'])} | Skipped (no backup): {len(summary['skipped_no_backup'])}"
-            )
-            return 0
+            return cmd_undo_last(args)
         if args.undo_command == "apply":
-            try:
-                summary = undo_history(repo=repo, run_id=args.run_id, force=args.force)
-            except RuntimeError as e:
-                print(f"Error: {e}", file=sys.stderr)
-                return 2
-            print(f"Reverted snapshot: {args.run_id}")
-            print(
-                f"Restored: {len(summary['restored'])} | Removed: {len(summary['removed'])} | Skipped (no backup): {len(summary['skipped_no_backup'])}"
-            )
-            return 0
+            return cmd_undo_apply(args)
         parser.error(f"Unknown undo command: {args.undo_command!r}")
         return 2
     if args.command == "llm":
         if args.llm_command == "run":
-            return cmd_llm_run(args)
+            return cmd_llm_run(args, project_root=project_root)
         if args.llm_command == "analyze":
-            return cmd_llm_analyze(args)
+            return cmd_llm_analyze(args, project_root=project_root)
         if args.llm_command == "profile":
-            return cmd_llm_profile(args)
+            return cmd_llm_profile(args, project_root=project_root)
         if args.llm_command == "optimize":
-            return cmd_llm_optimize(args)
+            return cmd_llm_optimize(args, project_root=project_root)
         parser.error(f"Unknown llm command: {args.llm_command!r}")
         return 2
 

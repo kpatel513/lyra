@@ -63,9 +63,11 @@ def test_cli_llm_wrapper_analyze_maps_profile_file(tmp_path: Path, monkeypatch) 
     fake_cli_path = src_dir / "cli.py"
     fake_cli_path.write_text("# placeholder\n", encoding="utf-8")
 
-    import lyra.cli as cli
+    from lyra.commands import llm_cmd
 
-    monkeypatch.setattr(cli, "__file__", str(fake_cli_path))
+    # Make llm_cmd resolve prompts relative to our fake repo root by monkeypatching
+    # the `project_root` we pass in.
+    project_root = repo_root
 
     captured = {}
 
@@ -80,7 +82,7 @@ def test_cli_llm_wrapper_analyze_maps_profile_file(tmp_path: Path, monkeypatch) 
             captured["output_format"] = output_format
             return LlmResult(command=["claude"], stdout="ok", stderr="", return_code=0)
 
-    monkeypatch.setattr(cli, "ClaudeCodeRunner", FakeRunner)
+    monkeypatch.setattr(llm_cmd, "ClaudeCodeRunner", FakeRunner)
 
     args = type(
         "Args",
@@ -93,7 +95,7 @@ def test_cli_llm_wrapper_analyze_maps_profile_file(tmp_path: Path, monkeypatch) 
         },
     )()
 
-    rc = cli.cmd_llm_analyze(args)
+    rc = llm_cmd.cmd_llm_analyze(args, project_root=project_root)
     assert rc == 0
     assert "Analyze prof.txt" in captured["prompt"]
     assert captured["extra_args"] == ["--dangerously-skip-permissions"]
