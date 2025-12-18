@@ -7,12 +7,13 @@ full agent-backed analysis module as Lyra evolves.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from pathlib import Path
-from typing import Dict, Iterable, List, Optional
 import os
 import subprocess
 from datetime import datetime
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Dict, Iterable, List, Optional
+import ast
 
 
 PYTHON_EXTENSIONS = {".py", ".pyw"}
@@ -26,11 +27,9 @@ class RepoSummary:
     training_scripts: List[Path]
 
     def format_human(self) -> str:
-        rel = (
-            lambda p: p.relative_to(self.root)
-            if p.is_relative_to(self.root)
-            else p
-        )
+        def rel(p: Path) -> Path:
+            return p.relative_to(self.root) if p.is_relative_to(self.root) else p
+
         training_list = (
             "\n".join(f"  - {rel(p)}" for p in self.training_scripts)
             or "  (none detected)"
@@ -95,6 +94,7 @@ class AnalysisFinding:
     file: Path
     line_number: int
     code_line: str
+    engine: str = "string"
 
 
 @dataclass
@@ -102,13 +102,11 @@ class AnalysisReport:
     root: Path
     training_scripts: List[Path]
     findings: List[AnalysisFinding]
+    parse_errors: List[Path]
 
     def format_human(self) -> str:
-        rel = (
-            lambda p: p.relative_to(self.root)
-            if p.is_relative_to(self.root)
-            else p
-        )
+        def rel(p: Path) -> Path:
+            return p.relative_to(self.root) if p.is_relative_to(self.root) else p
 
         if not self.training_scripts:
             header = (
@@ -127,12 +125,21 @@ class AnalysisReport:
             )
 
         if not self.findings:
-            return header + (
+            tail = (
                 "\n"
                 "🔍 No clear signs of mixed precision, DDP/FSDP, or DeepSpeed usage were\n"
                 "found in the scanned training scripts. This does not guarantee they are\n"
                 "absent, but suggests they are not configured in a conventional way.\n"
             )
+            if self.parse_errors:
+                tail += (
+                    "\n"
+                    "⚠️ Note: Some files could not be parsed with the AST engine and were skipped:\n"
+                    + "\n".join(f"  - {rel(p)}" for p in self.parse_errors[:10])
+                    + ("\n  - … more" if len(self.parse_errors) > 10 else "")
+                    + "\n"
+                )
+            return header + tail
 
         # Group findings by kind for a compact overview.
         by_kind: Dict[str, List[AnalysisFinding]] = {}
@@ -175,10 +182,17 @@ class AnalysisReport:
             # Show up to a few concrete locations
             for f in findings[:5]:
                 lines.append(
-                    f"    • {rel(f.file)}:{f.line_number}: {f.code_line.strip()}"
+                    f"    • {rel(f.file)}:{f.line_number}: {f.code_line.strip()} [{f.engine}]"
                 )
             if len(findings) > 5:
                 lines.append(f"    • … {len(findings) - 5} more")
+
+        if self.parse_errors:
+            lines.append("\n⚠️ AST parse errors (skipped):")
+            for p in self.parse_errors[:10]:
+                lines.append(f"  - {rel(p)}")
+            if len(self.parse_errors) > 10:
+                lines.append("  - … more")
 
         return "\n".join(lines) + "\n"
 
@@ -277,7 +291,12 @@ _register_patterns(
 )
 
 
-def analyze_repo(root: Path) -> AnalysisReport:
+def analyze_repo(
+    root: Path,
+    *,
+    scan_all_python_files: bool = False,
+    engine: str = "ast",
+) -> AnalysisReport:
     """
     Scan likely training scripts for common optimization and distributed patterns:
     - mixed precision & AMP
@@ -288,13 +307,38 @@ def analyze_repo(root: Path) -> AnalysisReport:
     candidates = summary.training_scripts
 
     # Fall back to scanning all python files if we didn't find any obvious
-    # training entrypoints.
-    if not candidates:
+    # training entrypoints, or if the user requested a full scan.
+    if scan_all_python_files or not candidates:
         candidates = list(_iter_python_files(summary.root))
 
+    if engine not in {"ast", "string"}:
+        raise ValueError("engine must be 'ast' or 'string'")
+
+    parse_errors: List[Path] = []
     findings: List[AnalysisFinding] = []
 
-    for f in candidates:
+    if engine == "ast":
+        ast_findings, ast_parse_errors = _analyze_files_ast(candidates)
+        findings.extend(ast_findings)
+        parse_errors.extend(ast_parse_errors)
+        # If we got no findings but had parse errors, fall back to string scan
+        # so we still provide something actionable.
+        if not findings and parse_errors:
+            findings.extend(_analyze_files_string(candidates))
+    else:
+        findings.extend(_analyze_files_string(candidates))
+
+    return AnalysisReport(
+        root=summary.root,
+        training_scripts=summary.training_scripts,
+        findings=findings,
+        parse_errors=parse_errors,
+    )
+
+
+def _analyze_files_string(files: List[Path]) -> List[AnalysisFinding]:
+    findings: List[AnalysisFinding] = []
+    for f in files:
         try:
             with f.open("r", encoding="utf-8", errors="ignore") as fh:
                 for lineno, line in enumerate(fh, start=1):
@@ -306,16 +350,181 @@ def analyze_repo(root: Path) -> AnalysisReport:
                                     file=f,
                                     line_number=lineno,
                                     code_line=line.rstrip("\n"),
+                                    engine="string",
                                 )
                             )
         except OSError:
             continue
+    return findings
 
-    return AnalysisReport(
-        root=summary.root,
-        training_scripts=summary.training_scripts,
-        findings=findings,
-    )
+
+def _analyze_files_ast(files: List[Path]) -> tuple[List[AnalysisFinding], List[Path]]:
+    findings: List[AnalysisFinding] = []
+    parse_errors: List[Path] = []
+
+    for f in files:
+        try:
+            source = f.read_text(encoding="utf-8", errors="ignore")
+        except OSError:
+            continue
+
+        try:
+            tree = ast.parse(source, filename=str(f))
+        except SyntaxError:
+            parse_errors.append(f)
+            continue
+
+        visitor = _LyraAstVisitor(file=f, source_lines=source.splitlines())
+        visitor.visit(tree)
+        findings.extend(visitor.findings)
+
+    return findings, parse_errors
+
+
+class _LyraAstVisitor(ast.NodeVisitor):
+    """
+    Detect common training/perf patterns with much lower false positives than string matching:
+    - AMP autocast / GradScaler
+    - DDP/FSDP usage
+    - Lightning Trainer precision/strategy flags
+    - DeepSpeed imports/strategy usage
+    """
+
+    def __init__(self, *, file: Path, source_lines: List[str]) -> None:
+        self.file = file
+        self.source_lines = source_lines
+        self.findings: List[AnalysisFinding] = []
+
+        # Track imported module aliases (e.g. import torch as t)
+        self.module_aliases: Dict[str, str] = {}
+        # Track imported names (e.g. from torch.cuda.amp import autocast)
+        self.name_aliases: Dict[str, str] = {}
+
+    def _line(self, lineno: int) -> str:
+        if 1 <= lineno <= len(self.source_lines):
+            return self.source_lines[lineno - 1]
+        return ""
+
+    def _add(self, kind: str, node: ast.AST) -> None:
+        lineno = getattr(node, "lineno", 1)
+        self.findings.append(
+            AnalysisFinding(
+                kind=kind,
+                file=self.file,
+                line_number=lineno,
+                code_line=self._line(lineno),
+                engine="ast",
+            )
+        )
+
+    def visit_Import(self, node: ast.Import) -> None:
+        for alias in node.names:
+            asname = alias.asname or alias.name
+            self.module_aliases[asname] = alias.name
+            if alias.name == "deepspeed":
+                self._add("deepspeed", node)
+        self.generic_visit(node)
+
+    def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
+        mod = node.module or ""
+        for alias in node.names:
+            asname = alias.asname or alias.name
+            full = f"{mod}.{alias.name}" if mod else alias.name
+            self.name_aliases[asname] = full
+
+            if full.endswith("torch.cuda.amp.autocast") or full.endswith("torch.amp.autocast"):
+                self._add("mixed_precision_autocast", node)
+            if full.endswith("torch.cuda.amp.GradScaler"):
+                self._add("mixed_precision_grad_scaler", node)
+            if full.endswith("torch.nn.parallel.DistributedDataParallel"):
+                self._add("ddp_torch", node)
+            if full.endswith("torch.distributed.fsdp.FullyShardedDataParallel"):
+                self._add("fsdp", node)
+            if "lightning" in full and full.endswith(".Trainer"):
+                # We'll detect Trainer call usage in visit_Call.
+                pass
+            if "DeepSpeedStrategy" in full:
+                self._add("deepspeed", node)
+        self.generic_visit(node)
+
+    def visit_With(self, node: ast.With) -> None:
+        # Detect `with autocast():` or `with torch.cuda.amp.autocast():`
+        for item in node.items:
+            ctx = item.context_expr
+            if isinstance(ctx, ast.Call):
+                if self._call_matches(ctx, {"torch.cuda.amp.autocast", "torch.amp.autocast", "autocast"}):
+                    self._add("mixed_precision_autocast", ctx)
+        self.generic_visit(node)
+
+    def visit_Call(self, node: ast.Call) -> None:
+        # GradScaler(...)
+        if self._call_matches(node, {"torch.cuda.amp.GradScaler", "GradScaler"}):
+            self._add("mixed_precision_grad_scaler", node)
+
+        # DistributedDataParallel(...)
+        if self._call_matches(node, {"torch.nn.parallel.DistributedDataParallel", "DistributedDataParallel"}):
+            self._add("ddp_torch", node)
+
+        # FullyShardedDataParallel / FSDP(...)
+        if self._call_matches(
+            node,
+            {
+                "torch.distributed.fsdp.FullyShardedDataParallel",
+                "FullyShardedDataParallel",
+                "FSDP",
+            },
+        ):
+            self._add("fsdp", node)
+
+        # Lightning Trainer(...) precision/strategy flags
+        if self._call_endswith(node, "Trainer"):
+            for kw in node.keywords:
+                if kw.arg == "precision":
+                    self._add("lightning_precision_arg", node)
+                if kw.arg == "strategy":
+                    # classify ddp/fsdp/deepspeed strategies if literal strings
+                    val = kw.value
+                    if isinstance(val, ast.Constant) and isinstance(val.value, str):
+                        v = val.value.lower()
+                        if "ddp" in v:
+                            self._add("ddp_lightning_strategy", node)
+                        if "fsdp" in v:
+                            self._add("fsdp", node)
+                        if "deepspeed" in v:
+                            self._add("deepspeed", node)
+
+        self.generic_visit(node)
+
+    def _call_endswith(self, node: ast.Call, name_suffix: str) -> bool:
+        callee = self._callee_fqn(node.func)
+        if not callee:
+            return False
+        return callee.endswith(name_suffix)
+
+    def _call_matches(self, node: ast.Call, fqn_set: set[str]) -> bool:
+        callee = self._callee_fqn(node.func)
+        if not callee:
+            return False
+        if callee in fqn_set:
+            return True
+        # Also allow matches on the last segment for common imported-name calls
+        last = callee.split(".")[-1]
+        return last in fqn_set
+
+    def _callee_fqn(self, func: ast.AST) -> Optional[str]:
+        # Name: GradScaler
+        if isinstance(func, ast.Name):
+            name = func.id
+            # Resolve imported alias
+            return self.name_aliases.get(name, name)
+        # Attribute: torch.cuda.amp.autocast
+        if isinstance(func, ast.Attribute):
+            base = self._callee_fqn(func.value)
+            if base:
+                return f"{base}.{func.attr}"
+            return func.attr
+        # Call like something()() is unusual; skip
+        return None
 
 
 # --- Safe profiling ---------------------------------------------------------
@@ -366,6 +575,7 @@ def run_safe_profile(
     training_script: Optional[str] = None,
     max_steps: int = 100,
     log_dir: Optional[Path] = None,
+    python_executable: Optional[str] = None,
 ) -> ProfileResult:
     """
     Run the training script in a best-effort "safe profiling" mode:
@@ -387,7 +597,11 @@ def run_safe_profile(
     timestamp = datetime.utcnow().strftime("%Y%m%d-%H%M%S")
     log_file = log_dir / f"profile_{script_path.stem}_{timestamp}.log"
 
-    python_exe = os.environ.get("PYTHON", os.sys.executable)
+    python_exe = (
+        python_executable
+        or os.environ.get("PYTHON")
+        or os.sys.executable
+    )
     cmd = [python_exe, str(script_path)]
 
     # Best-effort safe mode signalling. The actual training script must

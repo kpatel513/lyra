@@ -61,6 +61,12 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Summarize an ML repository for mixed precision and sharding implementations.",
     )
     _add_common_repo_argument(summarize)
+    summarize.add_argument(
+        "--output",
+        type=str,
+        default=None,
+        help="Optional path to write the report text to.",
+    )
 
     # lyra analyze
     analyze = subparsers.add_parser(
@@ -68,6 +74,23 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Analyze training pipelines for performance bottlenecks.",
     )
     _add_common_repo_argument(analyze)
+    analyze.add_argument(
+        "--scan-all",
+        action="store_true",
+        help="Scan all Python files, not only likely training entrypoints.",
+    )
+    analyze.add_argument(
+        "--engine",
+        choices=["ast", "string"],
+        default="ast",
+        help="Analysis engine: AST-based (lower false positives) or legacy string scan.",
+    )
+    analyze.add_argument(
+        "--output",
+        type=str,
+        default=None,
+        help="Optional path to write the report text to.",
+    )
 
     # lyra profile
     profile = subparsers.add_parser(
@@ -86,6 +109,13 @@ def _build_parser() -> argparse.ArgumentParser:
         type=int,
         default=100,
         help="Maximum number of training steps to allow during safe profiling (default: 100).",
+    )
+    profile.add_argument(
+        "--python",
+        dest="python_executable",
+        type=str,
+        default=None,
+        help="Override the Python executable used to run the training script.",
     )
 
     # lyra setup
@@ -109,27 +139,58 @@ def _resolve_repo_path(raw: str) -> Path:
     return path
 
 
+def _write_output_if_requested(text: str, output: str | None) -> None:
+    if not output:
+        return
+    out_path = Path(output).expanduser().resolve()
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(text, encoding="utf-8")
+    print(f"Wrote report to: {out_path}")
+
+
 def cmd_summarize(args: argparse.Namespace) -> int:
     repo = _resolve_repo_path(args.repo_path)
+    if not repo.exists():
+        print(f"Error: repo_path does not exist: {repo}", file=sys.stderr)
+        return 2
+
     summary = summarize_repo(repo)
-    print(summary.format_human())
+    text = summary.format_human()
+    print(text)
+    _write_output_if_requested(text, args.output)
     return 0
 
 
 def cmd_analyze(args: argparse.Namespace) -> int:
     repo = _resolve_repo_path(args.repo_path)
-    report = analyze_repo(repo)
-    print(report.format_human())
+    if not repo.exists():
+        print(f"Error: repo_path does not exist: {repo}", file=sys.stderr)
+        return 2
+
+    report = analyze_repo(repo, scan_all_python_files=args.scan_all, engine=args.engine)
+    text = report.format_human()
+    print(text)
+    _write_output_if_requested(text, args.output)
     return 0
 
 
 def cmd_profile(args: argparse.Namespace) -> int:
     repo = _resolve_repo_path(args.repo_path)
-    result = run_safe_profile(
-        root=repo,
-        training_script=args.training_script,
-        max_steps=args.max_steps,
-    )
+    if not repo.exists():
+        print(f"Error: repo_path does not exist: {repo}", file=sys.stderr)
+        return 2
+
+    try:
+        result = run_safe_profile(
+            root=repo,
+            training_script=args.training_script,
+            max_steps=args.max_steps,
+            python_executable=args.python_executable,
+        )
+    except (FileNotFoundError, RuntimeError) as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return 2
+
     print(result.format_human())
     return result.return_code
 
