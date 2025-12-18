@@ -388,6 +388,11 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Actually run Claude analyze+optimize prompts (may modify repo). Default is dry-run (profile only).",
     )
     optimize.add_argument(
+        "--plan",
+        action="store_true",
+        help="Run profile + Claude analysis only (no code changes, no re-profile).",
+    )
+    optimize.add_argument(
         "--output-format",
         choices=["text", "json"],
         default="text",
@@ -646,9 +651,13 @@ def cmd_optimize(args: argparse.Namespace) -> int:
             training_script=args.training_script,
             max_steps=args.max_steps,
             apply=args.apply,
+            plan=args.plan,
             project_root=project_root,
         )
     except RuntimeError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return 2
+    except ValueError as e:
         print(f"Error: {e}", file=sys.stderr)
         return 2
 
@@ -660,11 +669,19 @@ def cmd_optimize(args: argparse.Namespace) -> int:
         lines = [
             "Lyra optimize",
             f"- repo: {report.repo}",
-            f"- applied: {report.applied}",
+            f"- mode: {report.mode}",
             f"- before log: {report.before['profile']['log_file']}",
         ]
         if report.after:
             lines.append(f"- after log: {report.after['profile']['log_file']}")
+        if report.diff:
+            d = report.diff
+            lines.append(
+                f"- duration_s: {d['duration_s']['before']} -> {d['duration_s']['after']} (Δ {d['duration_s']['delta']})"
+            )
+            lines.append(
+                f"- exit_reason: {d['exit_reason']['before']} -> {d['exit_reason']['after']}"
+            )
         if report.analysis_output:
             lines.append(f"- analysis output: {report.analysis_output}")
         if report.optimize_output:

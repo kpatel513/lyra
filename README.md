@@ -93,6 +93,12 @@ Dry-run (profiles only):
 lyra optimize /path/to/repo train.py --max-steps 100
 ```
 
+Plan (profile + Claude analysis only; no code changes):
+
+```bash
+lyra optimize /path/to/repo train.py --max-steps 100 --plan
+```
+
 Apply (runs Claude prompts and may modify the repo):
 
 ```bash

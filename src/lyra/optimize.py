@@ -13,18 +13,20 @@ from .prompts import load_prompt, resolve_prompt
 @dataclass(frozen=True)
 class OptimizeReport:
     repo: Path
-    applied: bool
+    mode: str  # "dry-run" | "plan" | "apply"
     before: dict
     after: Optional[dict]
+    diff: Optional[dict]
     analysis_output: Optional[Path]
     optimize_output: Optional[Path]
 
     def to_dict(self) -> dict:
         return {
             "repo": str(self.repo),
-            "applied": self.applied,
+            "mode": self.mode,
             "before": self.before,
             "after": self.after,
+            "diff": self.diff,
             "analysis_output": str(self.analysis_output) if self.analysis_output else None,
             "optimize_output": str(self.optimize_output) if self.optimize_output else None,
         }
@@ -66,6 +68,7 @@ def optimize_repo(
     training_script: Optional[str],
     max_steps: int,
     apply: bool,
+    plan: bool,
     project_root: Path,
 ) -> OptimizeReport:
     """
@@ -77,6 +80,9 @@ def optimize_repo(
     `apply=False` is safe: it only profiles and returns a report scaffold.
     """
     repo = repo.expanduser().resolve()
+
+    if apply and plan:
+        raise ValueError("Only one of apply/plan can be true.")
 
     before_res = run_safe_profile(
         root=repo,
@@ -90,12 +96,12 @@ def optimize_repo(
     analysis_output = None
     optimize_output = None
     after = None
+    diff = None
 
-    if apply:
+    if apply or plan:
         # Store outputs in the repo so they can be inspected later.
         out_dir = repo / ".lyra" / "optimize"
         analysis_output = out_dir / "analysis.txt"
-        optimize_output = out_dir / "optimize.txt"
 
         # Use existing prompt assets. We pass the profile log as $ARGUMENTS to analyze.
         _run_prompt_in_repo(
@@ -108,32 +114,71 @@ def optimize_repo(
             output_format="text",
         )
 
-        _run_prompt_in_repo(
-            repo=repo,
-            project_root=project_root,
-            prompt_name="lyraOptimize",
-            arguments=str(analysis_output),
-            training_script="",
-            output_path=optimize_output,
-            output_format="text",
-        )
+        if apply:
+            optimize_output = out_dir / "optimize.txt"
+            _run_prompt_in_repo(
+                repo=repo,
+                project_root=project_root,
+                prompt_name="lyraOptimize",
+                arguments=str(analysis_output),
+                training_script="",
+                output_path=optimize_output,
+                output_format="text",
+            )
 
-        after_res = run_safe_profile(
-            root=repo,
-            training_script=training_script,
-            max_steps=max_steps,
-            isolated=True,
-        )
-        after_metrics = parse_profile_log(after_res.log_file).to_dict()
-        after = {"profile": after_res.to_dict(), "metrics": after_metrics}
+            after_res = run_safe_profile(
+                root=repo,
+                training_script=training_script,
+                max_steps=max_steps,
+                isolated=True,
+            )
+            after_metrics = parse_profile_log(after_res.log_file).to_dict()
+            after = {"profile": after_res.to_dict(), "metrics": after_metrics}
+
+            diff = _diff_before_after(before, after)
 
     return OptimizeReport(
         repo=repo,
-        applied=apply,
+        mode=("apply" if apply else ("plan" if plan else "dry-run")),
         before=before,
         after=after,
+        diff=diff,
         analysis_output=analysis_output,
         optimize_output=optimize_output,
     )
+
+
+def _diff_before_after(before: dict, after: dict) -> dict:
+    """
+    Compute a small, stable before/after diff for consumption by humans or tooling.
+    """
+    bprof = before.get("profile", {})
+    aprof = after.get("profile", {})
+    bmet = before.get("metrics", {})
+    amet = after.get("metrics", {})
+
+    bdur = bprof.get("duration_s")
+    adur = aprof.get("duration_s")
+    duration_delta = (adur - bdur) if isinstance(bdur, (int, float)) and isinstance(adur, (int, float)) else None
+
+    return {
+        "duration_s": {
+            "before": bdur,
+            "after": adur,
+            "delta": duration_delta,
+        },
+        "exit_reason": {
+            "before": bmet.get("exit_reason"),
+            "after": amet.get("exit_reason"),
+        },
+        "max_steps": {
+            "before": bmet.get("max_steps"),
+            "after": amet.get("max_steps"),
+        },
+        "saving_disabled": {
+            "before": bmet.get("saving_disabled"),
+            "after": amet.get("saving_disabled"),
+        },
+    }
 
 
