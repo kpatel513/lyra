@@ -21,6 +21,8 @@ from pathlib import Path
 
 from . import __version__
 from .core import analyze_repo, run_safe_profile, summarize_repo
+from .llm import ClaudeCodeRunner
+from .prompts import load_prompt, resolve_prompt
 
 
 def _add_common_repo_argument(parser: argparse.ArgumentParser) -> None:
@@ -131,6 +133,53 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Optional name for the environment. If omitted, Lyra will generate one.",
     )
 
+    # lyra llm
+    llm = subparsers.add_parser(
+        "llm",
+        help="Run Claude Code prompts (commands/*.md) non-interactively.",
+    )
+    llm_sub = llm.add_subparsers(dest="llm_command", metavar="<llm_command>", required=True)
+
+    llm_run = llm_sub.add_parser(
+        "run",
+        help="Run a prompt by name (from commands/) or by path.",
+    )
+    llm_run.add_argument(
+        "prompt",
+        type=str,
+        help="Prompt name (e.g. lyraAnalyze) or path to a .md prompt file.",
+    )
+    llm_run.add_argument(
+        "--repo",
+        type=str,
+        required=True,
+        help="Repository/workspace to run Claude Code in (sets cwd so tools can access the repo).",
+    )
+    llm_run.add_argument(
+        "--arguments",
+        type=str,
+        default="",
+        help="Value substituted for $ARGUMENTS in the prompt template.",
+    )
+    llm_run.add_argument(
+        "--training-script",
+        type=str,
+        default="",
+        help="Value substituted for $TRAINING_SCRIPT in the prompt template.",
+    )
+    llm_run.add_argument(
+        "--output-format",
+        choices=["text", "json", "stream-json"],
+        default="text",
+        help="Claude output format (passed to --output-format).",
+    )
+    llm_run.add_argument(
+        "--output",
+        type=str,
+        default=None,
+        help="Optional path to write Claude output to.",
+    )
+
     return parser
 
 
@@ -195,6 +244,48 @@ def cmd_profile(args: argparse.Namespace) -> int:
     return result.return_code
 
 
+def cmd_llm_run(args: argparse.Namespace) -> int:
+    repo = _resolve_repo_path(args.repo)
+    if not repo.exists():
+        print(f"Error: --repo does not exist: {repo}", file=sys.stderr)
+        return 2
+
+    # Resolve and render prompt
+    project_root = Path(__file__).resolve().parents[2]
+    prompt_path = resolve_prompt(project_root, args.prompt)
+    if not prompt_path.exists():
+        print(f"Error: prompt not found: {prompt_path}", file=sys.stderr)
+        return 2
+
+    spec = load_prompt(prompt_path)
+    rendered = spec.render(
+        {
+            "ARGUMENTS": args.arguments,
+            "TRAINING_SCRIPT": args.training_script,
+        }
+    ).strip()
+
+    runner = ClaudeCodeRunner()
+    if not runner.is_available():
+        print("Error: Claude Code CLI not found (expected `claude` in PATH).", file=sys.stderr)
+        return 2
+
+    result = runner.run(
+        prompt=rendered,
+        cwd=repo,
+        extra_args=spec.cli_args,
+        output_format=args.output_format,
+    )
+
+    # Surface stderr if any (Claude sometimes uses stderr for warnings)
+    if result.stderr.strip():
+        print(result.stderr, file=sys.stderr)
+
+    print(result.stdout)
+    _write_output_if_requested(result.stdout, args.output)
+    return result.return_code
+
+
 def cmd_setup(args: argparse.Namespace) -> int:
     repo = _resolve_repo_path(args.repo_path)
     env_name = args.environment_name or "<auto-generate>"
@@ -222,6 +313,11 @@ def main(argv: list[str] | None = None) -> int:
         return cmd_profile(args)
     if args.command == "setup":
         return cmd_setup(args)
+    if args.command == "llm":
+        if args.llm_command == "run":
+            return cmd_llm_run(args)
+        parser.error(f"Unknown llm command: {args.llm_command!r}")
+        return 2
 
     parser.error(f"Unknown command: {args.command!r}")
     return 2
