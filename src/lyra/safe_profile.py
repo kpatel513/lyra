@@ -10,9 +10,10 @@ from typing import Optional
 SAFE_PROFILE_SITECUSTOMIZE = r"""
 import os
 import sys
+from typing import Optional
 
 
-def _truthy(v: str | None) -> bool:
+def _truthy(v: Optional[str]) -> bool:
     if v is None:
         return False
     return v.strip().lower() in {"1", "true", "yes", "y", "on"}
