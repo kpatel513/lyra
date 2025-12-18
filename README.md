@@ -152,7 +152,7 @@ lyra optimize /path/to/repo train.py --max-steps 100 --apply
 Notes:
 - In `--apply` mode, optimize writes prompt outputs under `.lyra/optimize/` and emits a **before/after diff** (duration + parsed metrics).
 - Use `--output-format json` for machine-readable reports.
-- In `--apply` mode, Lyra also records an **undo snapshot** under `.lyra/history/<run-id>/`.
+- In `--apply` mode, Lyra also records an **undo snapshot** under `.lyra/history/<run-id>/` and prints the **undo id** in the command output.
 
 ### `lyra llm` (Claude Code CLI integration)
 
@@ -198,6 +198,10 @@ lyra setup /path/to/repo --prefer conda --skip-install
 ### `lyra undo`
 
 Revert changes made by `lyra optimize --apply` using snapshots stored under `.lyra/history/`.
+
+To get a `<run-id>`, either:
+- copy it from the `lyra optimize --apply` output (`undo id: ...`), or
+- run `lyra undo list --repo /path/to/repo` and use the `run_id` field.
 
 ```bash
 # list snapshots (JSON)
