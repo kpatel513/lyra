@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Optional
 
 from .core import run_safe_profile
+from .history import create_history_entry, finalize_history_entry
 from .llm import ClaudeCodeRunner
 from .metrics import parse_profile_log
 from .prompts import load_prompt, resolve_prompt
@@ -19,6 +20,7 @@ class OptimizeReport:
     diff: Optional[dict]
     analysis_output: Optional[Path]
     optimize_output: Optional[Path]
+    history_run_id: Optional[str]
 
     def to_dict(self) -> dict:
         return {
@@ -29,6 +31,7 @@ class OptimizeReport:
             "diff": self.diff,
             "analysis_output": str(self.analysis_output) if self.analysis_output else None,
             "optimize_output": str(self.optimize_output) if self.optimize_output else None,
+            "history_run_id": self.history_run_id,
         }
 
 
@@ -97,6 +100,7 @@ def optimize_repo(
     optimize_output = None
     after = None
     diff = None
+    history_run_id: Optional[str] = None
 
     if apply or plan:
         # Store outputs in the repo so they can be inspected later.
@@ -115,6 +119,9 @@ def optimize_repo(
         )
 
         if apply:
+            hist = create_history_entry(repo=repo, command="lyra optimize --apply")
+            history_run_id = hist.run_id
+
             optimize_output = out_dir / "optimize.txt"
             _run_prompt_in_repo(
                 repo=repo,
@@ -125,6 +132,8 @@ def optimize_repo(
                 output_path=optimize_output,
                 output_format="text",
             )
+
+            finalize_history_entry(hist)
 
             after_res = run_safe_profile(
                 root=repo,
@@ -145,6 +154,7 @@ def optimize_repo(
         diff=diff,
         analysis_output=analysis_output,
         optimize_output=optimize_output,
+        history_run_id=history_run_id,
     )
 
 

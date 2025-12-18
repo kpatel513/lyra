@@ -28,6 +28,7 @@ from .metrics import parse_profile_log
 from .optimize import optimize_repo
 from .prompts import load_prompt, resolve_prompt
 from .setup_env import detect_repo_deps, setup_conda, setup_venv
+from .history import list_history, undo_history
 
 
 def _add_common_repo_argument(parser: argparse.ArgumentParser) -> None:
@@ -405,6 +406,25 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Optional path to write the report output to.",
     )
 
+    # lyra undo
+    undo = subparsers.add_parser(
+        "undo",
+        help="Revert repo changes made by `lyra optimize --apply` using .lyra/history snapshots.",
+    )
+    undo_sub = undo.add_subparsers(dest="undo_command", metavar="<undo_command>", required=True)
+
+    undo_list = undo_sub.add_parser("list", help="List available undo snapshots.")
+    undo_list.add_argument("--repo", type=str, required=True, help="Target repo containing .lyra/history.")
+
+    undo_last = undo_sub.add_parser("last", help="Undo the most recent snapshot.")
+    undo_last.add_argument("--repo", type=str, required=True, help="Target repo containing .lyra/history.")
+    undo_last.add_argument("--force", action="store_true", help="Overwrite even if files changed since run.")
+
+    undo_apply = undo_sub.add_parser("apply", help="Undo a specific snapshot by run-id.")
+    undo_apply.add_argument("--repo", type=str, required=True, help="Target repo containing .lyra/history.")
+    undo_apply.add_argument("run_id", type=str, help="History run id (directory name under .lyra/history).")
+    undo_apply.add_argument("--force", action="store_true", help="Overwrite even if files changed since run.")
+
     return parser
 
 
@@ -686,6 +706,8 @@ def cmd_optimize(args: argparse.Namespace) -> int:
             lines.append(f"- analysis output: {report.analysis_output}")
         if report.optimize_output:
             lines.append(f"- optimize output: {report.optimize_output}")
+        if report.history_run_id:
+            lines.append(f"- undo id: {report.history_run_id}")
         text = "\n".join(lines) + "\n"
         print(text)
         _write_output_if_requested(text, args.output)
@@ -710,6 +732,38 @@ def main(argv: list[str] | None = None) -> int:
         return cmd_check(args)
     if args.command == "optimize":
         return cmd_optimize(args)
+    if args.command == "undo":
+        repo = _resolve_repo_path(args.repo)
+        if args.undo_command == "list":
+            items = list_history(repo)
+            print(json.dumps(items, indent=2, sort_keys=True))
+            return 0
+        if args.undo_command == "last":
+            items = list_history(repo)
+            if not items:
+                print("No history entries found.", file=sys.stderr)
+                return 2
+            run_id = items[0].get("run_id")
+            if not run_id:
+                print("History metadata missing run_id.", file=sys.stderr)
+                return 2
+            try:
+                undo_history(repo=repo, run_id=run_id, force=args.force)
+            except RuntimeError as e:
+                print(f"Error: {e}", file=sys.stderr)
+                return 2
+            print(f"Reverted snapshot: {run_id}")
+            return 0
+        if args.undo_command == "apply":
+            try:
+                undo_history(repo=repo, run_id=args.run_id, force=args.force)
+            except RuntimeError as e:
+                print(f"Error: {e}", file=sys.stderr)
+                return 2
+            print(f"Reverted snapshot: {args.run_id}")
+            return 0
+        parser.error(f"Unknown undo command: {args.undo_command!r}")
+        return 2
     if args.command == "llm":
         if args.llm_command == "run":
             return cmd_llm_run(args)
