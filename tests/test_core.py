@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pytest
-
 from lyra.core import analyze_repo, run_safe_profile, summarize_repo
 
 

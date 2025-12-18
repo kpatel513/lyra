@@ -27,11 +27,9 @@ class RepoSummary:
     training_scripts: List[Path]
 
     def format_human(self) -> str:
-        rel = (
-            lambda p: p.relative_to(self.root)
-            if p.is_relative_to(self.root)
-            else p
-        )
+        def rel(p: Path) -> Path:
+            return p.relative_to(self.root) if p.is_relative_to(self.root) else p
+
         training_list = (
             "\n".join(f"  - {rel(p)}" for p in self.training_scripts)
             or "  (none detected)"
@@ -107,11 +105,8 @@ class AnalysisReport:
     parse_errors: List[Path]
 
     def format_human(self) -> str:
-        rel = (
-            lambda p: p.relative_to(self.root)
-            if p.is_relative_to(self.root)
-            else p
-        )
+        def rel(p: Path) -> Path:
+            return p.relative_to(self.root) if p.is_relative_to(self.root) else p
 
         if not self.training_scripts:
             header = (
