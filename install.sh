@@ -5,6 +5,11 @@
 
 set -e  # Exit on any error
 
+echo "⚠️  DEPRECATED: This bash installer is kept for backward compatibility."
+echo "✅ Recommended: install Lyra via Python instead:"
+echo "   python -m venv .venv && source .venv/bin/activate && pip install -e \".[dev]\""
+echo ""
+
 echo "🚀 Installing Lyra..."
 
 # Get the directory where this script is located

@@ -1,209 +1,127 @@
-# lyra
+# Lyra
 
-Lyra is an AI Agent that automatically analyzes and optimizes ML training code before it runs on production clusters. It boosts model iteration speed, reduces GPU waste, and enforces training efficiency through profiling, smart code analysis, and detailed performance validation.
+Lyra is a Python-first CLI + agent toolkit for **inspecting, profiling, and optimizing ML training code** before it runs on expensive hardware. It supports local static analysis and optional LLM-driven workflows via **Claude Code CLI**.
 
 ## Installation
 
 ### Prerequisites
 
-- [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code/quickstart) installed and configured
-- Python 3.9+ (recommended for the new Python CLI)
-- Bash shell (macOS/Linux) (legacy install flow)
+- **Python 3.9+**
+- **Claude Code CLI** (only required for `lyra llm ...`): see [`https://docs.anthropic.com/en/docs/claude-code/quickstart`](https://docs.anthropic.com/en/docs/claude-code/quickstart)
 
-### Install Lyra
-
-#### Python install (recommended)
+### Install (recommended)
 
 From the repo root:
 
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-pip install -e .
+pip install -e ".[dev]"
 ```
 
-Then run:
+Verify:
 
 ```bash
 lyra --version
-lyra summarize /path/to/your/ml/repository
-lyra analyze /path/to/your/ml/repository
-lyra profile /path/to/your/ml/repository train.py --max-steps 100
+python -m lyra --version
 ```
 
-#### Legacy install (bash PATH helper)
+### Legacy installer (deprecated)
 
-1. **Clone or download the Lyra repository**
-   ```bash
-   git clone [your-repo-url] lyra
-   cd lyra
-   ```
+`install.sh` is **deprecated** and kept only for backward compatibility. Prefer the Python install above.
 
-2. **Run the installation script**
-   ```bash
-   ./install.sh
-   ```
-
-The install script will automatically:
-- Check for Claude Code CLI
-- Make scripts executable  
-- Add Lyra to your PATH in `~/.zshrc`
-- Test the installation
-- Backup your existing `~/.zshrc`
-
-### Verify Installation
-
-Test that Lyra is working correctly:
+## Quickstart
 
 ```bash
-# If added to PATH:
-lyra-summarize
-lyra-analyze  
-lyra-profile
-lyra-setup
+# 1) Structural summary + likely training entrypoints
+lyra summarize /path/to/your/ml/repo
 
-# Or use the full paths:
-/path/to/lyra/lyra-summarize
-/path/to/lyra/lyra-analyze
-/path/to/lyra/lyra-profile
-/path/to/lyra/lyra-setup
+# 2) Static analysis for AMP/DDP/FSDP/DeepSpeed usage (AST by default)
+lyra analyze /path/to/your/ml/repo
+
+# 3) Best-effort "safe" profiling run (writes logs under .lyra/)
+lyra profile /path/to/your/ml/repo train.py --max-steps 100
 ```
 
-You should see usage messages:
-```
-Usage: lyra-summarize REPO_PATH
-Usage: lyra-analyze REPO_PATH
-Usage: lyra-profile REPO_PATH
-Usage: lyra-setup REPO_PATH
-```
+## Commands
 
-## Usage
+### `lyra summarize`
 
-Lyra provides four main commands for comprehensive ML training analysis:
-
-### Repository Analysis (lyra-summarize)
-
-Analyze any ML repository for mixed precision training and sharding implementations:
+Summarizes a repo (Python file counts, total lines, and likely training scripts).
 
 ```bash
-lyra-summarize /path/to/your/ml/repository
+lyra summarize /path/to/repo --output /tmp/lyra-summary.txt
 ```
 
-**Example:**
-```bash
-lyra-summarize ~/Work/my-pytorch-project
-```
+### `lyra analyze`
 
-This generates a comprehensive report covering:
-1. **Mixed Precision Training** - Detection of AMP, FP16/BF16 usage, GradScaler, etc.
-2. **Sharding** - Analysis of distributed training, model parallelism, tensor sharding strategies
-
-### Performance Analysis (lyra-analyze)
-
-Analyze training pipelines for performance bottlenecks and profiling opportunities:
+Scans likely training scripts (or all Python files with `--scan-all`) for:
+- **Mixed precision** (AMP autocast, GradScaler, Lightning precision)
+- **Distributed training** (DDP, Lightning strategies)
+- **Sharding / DeepSpeed** (FSDP, DeepSpeedStrategy)
 
 ```bash
-lyra-analyze /path/to/your/ml/repository
+lyra analyze /path/to/repo
+lyra analyze /path/to/repo --scan-all
+lyra analyze /path/to/repo --engine ast
+lyra analyze /path/to/repo --engine string  # legacy fallback
+lyra analyze /path/to/repo --output /tmp/lyra-analysis.txt
 ```
 
-**Example:**
-```bash
-lyra-analyze ~/Work/my-pytorch-project
-```
+### `lyra profile`
 
-This generates a performance analysis report covering:
-1. **Existing Profiling Setup** - Current profiler configurations and performance monitoring
-2. **Training Pipeline Analysis** - Components that could benefit from profiling
-3. **Performance Bottleneck Indicators** - Potential performance issues in the code
-4. **Profiling Recommendations** - Specific strategies to optimize training performance
-
-### Safe Profiling (lyra-profile)
-
-Generate profiler data by running training code in safe mode:
+Runs a training script in a best-effort safe mode:
+- Captures stdout/stderr to `.lyra/profiles/profile_<script>_<timestamp>.log`
+- Sets env vars (your training code can choose to honor these):
+  - `LYRA_SAFE_PROFILE=1`
+  - `LYRA_MAX_STEPS=<N>`
+  - `LYRA_DISABLE_SAVING=1`
 
 ```bash
-lyra-profile /path/to/your/ml/repository [TRAINING_SCRIPT]
+lyra profile /path/to/repo train.py --max-steps 100
+lyra profile /path/to/repo train.py --python /path/to/python
 ```
 
-**Examples:**
-```bash
-# Auto-detect training script
-lyra-profile ~/Work/my-pytorch-project
+### `lyra llm` (Claude Code CLI integration)
 
-# Profile specific training script
-lyra-profile ~/Work/my-pytorch-project train.py
+Runs prompts from `commands/*.md` non-interactively using `claude -p`.
 
-# Profile script in subdirectory
-lyra-profile ~/Work/my-pytorch-project scripts/train_model.py
-```
-
-This safely profiles your training pipeline by:
-1. **Safe Mode Operation** - Disables model saving, prevents data modification, limits to 100 steps
-2. **Advanced Profiling** - Adds PyTorch Lightning AdvancedProfiler for detailed timing analysis
-3. **Automated Execution** - Runs modified training code and generates profiler reports
-4. **Clean Restoration** - Restores all temporarily modified files and cleans up environments
-
-**Note:** Environment setup is handled by the separate `lyra-setup` command and can be run independently when needed.
-
-The generated profiler report can then be analyzed using `lyra-analyze` for bottleneck identification.
-
-### Environment Setup (lyra-setup)
-
-Create isolated environments for safe profiling:
+Convenience wrappers:
 
 ```bash
-lyra-setup /path/to/your/ml/repository [ENVIRONMENT_NAME]
+lyra llm analyze  --repo /path/to/workspace --profile-file /path/to/profile.txt
+lyra llm profile  --repo /path/to/workspace --training-script train.py
+lyra llm optimize --repo /path/to/workspace --analysis-file /path/to/analysis.md
 ```
 
-**Examples:**
-```bash
-# Auto-generate environment name
-lyra-setup ~/Work/my-pytorch-project
-
-# Use custom environment name
-lyra-setup ~/Work/my-pytorch-project my-custom-env
-```
-
-This creates an isolated environment by:
-1. **Configuration Detection** - Automatically detects requirements.txt, environment.yml, pyproject.toml, etc.
-2. **Environment Creation** - Creates conda/venv environment with unique name
-3. **Dependency Installation** - Installs all project dependencies automatically
-4. **Verification** - Ensures environment is properly configured and ready for profiling
-
-**Note:** This step is optional if you already have a suitable environment configured.
-
-### Workflow Integration
-
-For comprehensive analysis, use the commands in sequence:
+Power-user mode:
 
 ```bash
-# 1. Analyze repository structure and optimizations
-lyra-summarize ~/my-project
-
-# 2. Set up isolated environment (optional)
-lyra-setup ~/my-project
-
-# 3. Generate profiler data safely  
-lyra-profile ~/my-project train.py
-
-# 4. Analyze profiler output for bottlenecks
-lyra-analyze ~/my-project
+lyra llm run lyraAnalyze --repo /path/to/workspace --arguments /path/to/profile.txt --output-format text
 ```
 
-All analyses are powered by Claude Code and provide detailed file locations, code snippets, and implementation details.
+## Development
 
-## Requirements
+Run lint + tests:
 
-- Claude Code CLI must be installed and authenticated
-- Target repositories should contain ML/AI training code (PyTorch, TensorFlow, JAX, etc.)
+```bash
+ruff check .
+pytest -q
+```
+
+CI runs `ruff` and `pytest` on pull requests via GitHub Actions.
 
 ## Troubleshooting
 
-**Command not found:**
-- Ensure the scripts are executable: `chmod +x lyra-summarize lyra-analyze lyra-profile lyra-setup`
-- Check that the path is correct when added to PATH
-- Try using the full path to the scripts
+### `claude` not found
 
-**Claude Code errors:**
-- Ensure Claude Code is properly installed and authenticated
-- Check that you're in a directory where Claude Code can run
+- Install Claude Code CLI and authenticate.
+- Confirm it’s on PATH:
+
+```bash
+claude --version
+```
+
+### Profile run doesn’t stop at 100 steps
+
+`lyra profile` sets env vars; your training script must read them to enforce strict limits. The log file location will still be written under `.lyra/profiles/`.
