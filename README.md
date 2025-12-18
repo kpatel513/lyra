@@ -41,6 +41,9 @@ lyra analyze /path/to/your/ml/repo
 
 # 3) Best-effort "safe" profiling run (writes logs under .lyra/)
 lyra profile /path/to/your/ml/repo train.py --max-steps 100
+
+# 4) Orchestrate (profile -> optional LLM -> re-profile)
+lyra optimize /path/to/your/ml/repo train.py --max-steps 100
 ```
 
 ## Commands
@@ -80,6 +83,26 @@ Runs a training script in a best-effort safe mode:
 ```bash
 lyra profile /path/to/repo train.py --max-steps 100
 lyra profile /path/to/repo train.py --python /path/to/python
+```
+
+### `lyra optimize`
+
+Dry-run (profiles only):
+
+```bash
+lyra optimize /path/to/repo train.py --max-steps 100
+```
+
+Plan (profile + Claude analysis only; no code changes):
+
+```bash
+lyra optimize /path/to/repo train.py --max-steps 100 --plan
+```
+
+Apply (runs Claude prompts and may modify the repo):
+
+```bash
+lyra optimize /path/to/repo train.py --max-steps 100 --apply
 ```
 
 ### `lyra llm` (Claude Code CLI integration)
