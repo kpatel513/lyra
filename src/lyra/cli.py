@@ -24,6 +24,7 @@ from .core import analyze_repo, run_safe_profile, summarize_repo
 from .check import run_check
 from .llm import ClaudeCodeRunner
 from .prompts import load_prompt, resolve_prompt
+from .setup_env import detect_repo_deps, setup_conda, setup_venv
 
 
 def _add_common_repo_argument(parser: argparse.ArgumentParser) -> None:
@@ -132,6 +133,36 @@ def _build_parser() -> argparse.ArgumentParser:
         type=str,
         nargs="?",
         help="Optional name for the environment. If omitted, Lyra will generate one.",
+    )
+    setup.add_argument(
+        "--prefer",
+        choices=["venv", "conda"],
+        default="venv",
+        help="Preferred environment type to create (default: venv).",
+    )
+    setup.add_argument(
+        "--python",
+        dest="python_executable",
+        type=str,
+        default=None,
+        help="Python executable to use for venv creation (default: current interpreter).",
+    )
+    setup.add_argument(
+        "--venv-dir",
+        type=str,
+        default=None,
+        help="Where to create the venv (default: <repo>/.venv).",
+    )
+    setup.add_argument(
+        "--skip-install",
+        action="store_true",
+        help="Create the environment but do not install dependencies.",
+    )
+    setup.add_argument(
+        "--requirements",
+        type=str,
+        default=None,
+        help="Explicit requirements file to install (default: <repo>/requirements.txt if present).",
     )
 
     # lyra check
@@ -448,16 +479,44 @@ def cmd_llm_optimize(args: argparse.Namespace) -> int:
 
 def cmd_setup(args: argparse.Namespace) -> int:
     repo = _resolve_repo_path(args.repo_path)
-    env_name = args.environment_name or "<auto-generate>"
-    print(
-        f"🎵 Lyra (setup)\n"
-        f"- Repository: {repo}\n"
-        f"- Environment name: {env_name}\n"
-        "\n"
-        "This is the Python CLI scaffold. Environment detection, creation,\n"
-        "and dependency installation will be implemented here."
+    if not repo.exists():
+        print(f"Error: repo_path does not exist: {repo}", file=sys.stderr)
+        return 2
+
+    deps = detect_repo_deps(repo)
+    env_name = args.environment_name or f"lyra-{repo.name}"
+
+    if args.prefer == "conda":
+        env_file = deps.get("environment.yml") or deps.get("environment.yaml")
+        if not env_file:
+            print("No environment.yml found; falling back to venv.", file=sys.stderr)
+        else:
+            result = setup_conda(
+                repo=repo,
+                env_name=env_name,
+                env_file=env_file,
+                install=not args.skip_install,
+            )
+            print(result.format_human())
+            return 0 if result.installed or args.skip_install else 2
+
+    python_exe = args.python_executable or sys.executable
+    venv_dir = Path(args.venv_dir).expanduser() if args.venv_dir else (repo / ".venv")
+    requirements_file = (
+        Path(args.requirements).expanduser().resolve()
+        if args.requirements
+        else deps.get("requirements.txt")
     )
-    return 0
+
+    result = setup_venv(
+        repo=repo,
+        venv_dir=venv_dir,
+        python_executable=python_exe,
+        install=not args.skip_install,
+        requirements_file=requirements_file,
+    )
+    print(result.format_human())
+    return 0 if result.env_path else 2
 
 
 def cmd_check(args: argparse.Namespace) -> int:

@@ -100,6 +100,29 @@ Power-user mode:
 lyra llm run lyraAnalyze --repo /path/to/workspace --arguments /path/to/profile.txt --output-format text
 ```
 
+### `lyra setup`
+
+Creates an environment for running/profiling a training repo.
+
+Venv (default):
+
+```bash
+lyra setup /path/to/repo
+source /path/to/repo/.venv/bin/activate
+```
+
+Skip dependency installation:
+
+```bash
+lyra setup /path/to/repo --skip-install
+```
+
+Conda (if `environment.yml` exists and `conda` is available):
+
+```bash
+lyra setup /path/to/repo --prefer conda --skip-install
+```
+
 ## Development
 
 Run lint + tests:
