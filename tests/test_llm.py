@@ -92,12 +92,27 @@ def test_cli_llm_wrapper_analyze_maps_profile_file(tmp_path: Path, monkeypatch) 
             "profile_file": "prof.txt",
             "output_format": "text",
             "output": None,
+            "model": "sonnet",
+            "permission_mode": "plan",
+            "allowed_tools": ["Bash(git:*)"],
+            "disallowed_tools": ["Edit"],
+            "dangerously_skip_permissions": False,
         },
     )()
 
     rc = llm_cmd.cmd_llm_analyze(args, project_root=project_root)
     assert rc == 0
     assert "Analyze prof.txt" in captured["prompt"]
-    assert captured["extra_args"] == ["--dangerously-skip-permissions"]
+    assert captured["extra_args"] == [
+        "--dangerously-skip-permissions",
+        "--model",
+        "sonnet",
+        "--permission-mode",
+        "plan",
+        "--allowed-tools",
+        "Bash(git:*)",
+        "--disallowed-tools",
+        "Edit",
+    ]
 
 

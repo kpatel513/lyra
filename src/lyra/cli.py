@@ -269,6 +269,30 @@ def _build_parser() -> argparse.ArgumentParser:
         default=None,
         help="Optional path to write Claude output to.",
     )
+    llm_analyze.add_argument("--model", type=str, default=None, help="Claude model override.")
+    llm_analyze.add_argument(
+        "--permission-mode",
+        choices=["acceptEdits", "bypassPermissions", "default", "plan"],
+        default=None,
+        help="Claude permission mode.",
+    )
+    llm_analyze.add_argument(
+        "--allowed-tools",
+        action="append",
+        default=None,
+        help="Allowed tools list (repeatable; comma/space-separated string).",
+    )
+    llm_analyze.add_argument(
+        "--disallowed-tools",
+        action="append",
+        default=None,
+        help="Disallowed tools list (repeatable; comma/space-separated string).",
+    )
+    llm_analyze.add_argument(
+        "--dangerously-skip-permissions",
+        action="store_true",
+        help="Bypass all Claude permission checks (use with extreme care).",
+    )
 
     llm_profile = llm_sub.add_parser(
         "profile",
@@ -304,6 +328,16 @@ def _build_parser() -> argparse.ArgumentParser:
         default=None,
         help="Optional path to write Claude output to.",
     )
+    llm_profile.add_argument("--model", type=str, default=None, help="Claude model override.")
+    llm_profile.add_argument(
+        "--permission-mode",
+        choices=["acceptEdits", "bypassPermissions", "default", "plan"],
+        default=None,
+        help="Claude permission mode.",
+    )
+    llm_profile.add_argument("--allowed-tools", action="append", default=None)
+    llm_profile.add_argument("--disallowed-tools", action="append", default=None)
+    llm_profile.add_argument("--dangerously-skip-permissions", action="store_true")
 
     llm_optimize = llm_sub.add_parser(
         "optimize",
@@ -333,6 +367,16 @@ def _build_parser() -> argparse.ArgumentParser:
         default=None,
         help="Optional path to write Claude output to.",
     )
+    llm_optimize.add_argument("--model", type=str, default=None, help="Claude model override.")
+    llm_optimize.add_argument(
+        "--permission-mode",
+        choices=["acceptEdits", "bypassPermissions", "default", "plan"],
+        default=None,
+        help="Claude permission mode.",
+    )
+    llm_optimize.add_argument("--allowed-tools", action="append", default=None)
+    llm_optimize.add_argument("--disallowed-tools", action="append", default=None)
+    llm_optimize.add_argument("--dangerously-skip-permissions", action="store_true")
 
     llm_run = llm_sub.add_parser(
         "run",
@@ -372,6 +416,20 @@ def _build_parser() -> argparse.ArgumentParser:
         type=str,
         default=None,
         help="Optional path to write Claude output to.",
+    )
+    llm_run.add_argument("--model", type=str, default=None, help="Claude model override.")
+    llm_run.add_argument(
+        "--permission-mode",
+        choices=["acceptEdits", "bypassPermissions", "default", "plan"],
+        default=None,
+        help="Claude permission mode.",
+    )
+    llm_run.add_argument("--allowed-tools", action="append", default=None)
+    llm_run.add_argument("--disallowed-tools", action="append", default=None)
+    llm_run.add_argument(
+        "--dangerously-skip-permissions",
+        action="store_true",
+        help="Bypass all Claude permission checks (use with extreme care).",
     )
 
     # lyra optimize
@@ -418,6 +476,20 @@ def _build_parser() -> argparse.ArgumentParser:
         type=str,
         default=None,
         help="Optional path to write the report output to.",
+    )
+    optimize.add_argument("--model", type=str, default=None, help="Claude model override (used for --plan/--apply).")
+    optimize.add_argument(
+        "--permission-mode",
+        choices=["acceptEdits", "bypassPermissions", "default", "plan"],
+        default=None,
+        help="Claude permission mode (used for --plan/--apply).",
+    )
+    optimize.add_argument("--allowed-tools", action="append", default=None, help="Allowed tools (repeatable).")
+    optimize.add_argument("--disallowed-tools", action="append", default=None, help="Disallowed tools (repeatable).")
+    optimize.add_argument(
+        "--dangerously-skip-permissions",
+        action="store_true",
+        help="Bypass Claude permission checks (used for --plan/--apply).",
     )
 
     # lyra undo

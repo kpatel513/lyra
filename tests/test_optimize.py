@@ -24,6 +24,11 @@ def test_optimize_repo_dry_run_profiles_only(tmp_path: Path) -> None:
             apply=False,
             plan=False,
             yes=False,
+            llm_model=None,
+            llm_permission_mode=None,
+            llm_allowed_tools=None,
+            llm_disallowed_tools=None,
+            llm_dangerously_skip_permissions=False,
             project_root=tmp_path,
         )
 
@@ -64,6 +69,11 @@ def test_optimize_repo_plan_runs_analysis_only(tmp_path: Path, monkeypatch) -> N
             apply=False,
             plan=True,
             yes=False,
+            llm_model=None,
+            llm_permission_mode=None,
+            llm_allowed_tools=None,
+            llm_disallowed_tools=None,
+            llm_dangerously_skip_permissions=False,
             project_root=tmp_path,
         )
 
