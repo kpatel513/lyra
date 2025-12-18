@@ -166,6 +166,13 @@ lyra llm profile  --repo /path/to/workspace --training-script train.py
 lyra llm optimize --repo /path/to/workspace --analysis-file /path/to/analysis.md
 ```
 
+Optional Claude controls (available on `lyra llm ...` and `lyra optimize` when using `--plan/--apply`):
+
+- `--model <name>` (e.g. `sonnet` or a full model id)
+- `--permission-mode <mode>` (`acceptEdits|bypassPermissions|default|plan`)
+- `--allowed-tools "<tools>"` / `--disallowed-tools "<tools>"` (repeatable; passed through to Claude Code)
+- `--dangerously-skip-permissions` (use with extreme care)
+
 Power-user mode:
 
 ```bash

@@ -23,6 +23,11 @@ def cmd_optimize(args: argparse.Namespace, *, project_root: Path) -> int:
             apply=args.apply,
             plan=args.plan,
             yes=args.yes,
+            llm_model=getattr(args, "model", None),
+            llm_permission_mode=getattr(args, "permission_mode", None),
+            llm_allowed_tools=getattr(args, "allowed_tools", None),
+            llm_disallowed_tools=getattr(args, "disallowed_tools", None),
+            llm_dangerously_skip_permissions=getattr(args, "dangerously_skip_permissions", False),
             project_root=project_root,
         )
     except (RuntimeError, ValueError) as e:

@@ -47,6 +47,7 @@ def _run_prompt_in_repo(
     training_script: str,
     output_path: Path,
     output_format: str = "text",
+    user_extra_args: Optional[list[str]] = None,
 ) -> None:
     prompt_path = resolve_prompt(project_root, prompt_name)
     spec = load_prompt(prompt_path)
@@ -56,10 +57,14 @@ def _run_prompt_in_repo(
     if not runner.is_available():
         raise RuntimeError("Claude Code CLI not found (`claude` not in PATH).")
 
+    merged_args = list(spec.cli_args)
+    if user_extra_args:
+        merged_args.extend(user_extra_args)
+
     res = runner.run(
         prompt=rendered,
         cwd=repo,
-        extra_args=spec.cli_args,
+        extra_args=merged_args,
         output_format=output_format,
     )
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -76,6 +81,11 @@ def optimize_repo(
     apply: bool,
     plan: bool,
     yes: bool,
+    llm_model: Optional[str] = None,
+    llm_permission_mode: Optional[str] = None,
+    llm_allowed_tools: Optional[list[str]] = None,
+    llm_disallowed_tools: Optional[list[str]] = None,
+    llm_dangerously_skip_permissions: bool = False,
     project_root: Path,
 ) -> OptimizeReport:
     """
@@ -120,6 +130,13 @@ def optimize_repo(
             training_script="",
             output_path=analysis_output,
             output_format="text",
+            user_extra_args=_build_llm_args_from_cli(
+                llm_model,
+                llm_permission_mode,
+                llm_allowed_tools,
+                llm_disallowed_tools,
+                llm_dangerously_skip_permissions,
+            ),
         )
 
         if apply:
@@ -147,6 +164,13 @@ def optimize_repo(
                 training_script="",
                 output_path=optimize_output,
                 output_format="text",
+                user_extra_args=_build_llm_args_from_cli(
+                    llm_model,
+                    llm_permission_mode,
+                    llm_allowed_tools,
+                    llm_disallowed_tools,
+                    llm_dangerously_skip_permissions,
+                ),
             )
 
             finalize_history_entry(hist)
@@ -172,6 +196,27 @@ def optimize_repo(
         optimize_output=optimize_output,
         history_run_id=history_run_id,
     )
+
+
+def _build_llm_args_from_cli(
+    model: Optional[str],
+    permission_mode: Optional[str],
+    allowed_tools: Optional[list[str]],
+    disallowed_tools: Optional[list[str]],
+    dangerously_skip_permissions: bool,
+) -> list[str]:
+    extra: list[str] = []
+    if dangerously_skip_permissions:
+        extra.append("--dangerously-skip-permissions")
+    if model:
+        extra.extend(["--model", model])
+    if permission_mode:
+        extra.extend(["--permission-mode", permission_mode])
+    for item in allowed_tools or []:
+        extra.extend(["--allowed-tools", item])
+    for item in disallowed_tools or []:
+        extra.extend(["--disallowed-tools", item])
+    return extra
 
 
 def compute_planned_files(*, repo: Path, analysis_output: Path, training_script: Optional[str]) -> list[str]:

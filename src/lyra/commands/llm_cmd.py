@@ -10,6 +10,25 @@ from ..prompts import load_prompt, resolve_prompt
 from .common import resolve_path, write_output_if_requested
 
 
+def _build_user_llm_args(args: argparse.Namespace) -> list[str]:
+    extra: list[str] = []
+    if getattr(args, "dangerously_skip_permissions", False):
+        extra.append("--dangerously-skip-permissions")
+    model = getattr(args, "model", None)
+    if model:
+        extra.extend(["--model", model])
+    pm = getattr(args, "permission_mode", None)
+    if pm:
+        extra.extend(["--permission-mode", pm])
+    allowed = getattr(args, "allowed_tools", None) or []
+    for item in allowed:
+        extra.extend(["--allowed-tools", item])
+    disallowed = getattr(args, "disallowed_tools", None) or []
+    for item in disallowed:
+        extra.extend(["--disallowed-tools", item])
+    return extra
+
+
 def _llm_execute(
     *,
     repo: Path,
@@ -19,6 +38,7 @@ def _llm_execute(
     output_format: str,
     output: Optional[str],
     project_root: Path,
+    user_extra_args: Optional[list[str]] = None,
 ) -> int:
     if not repo.exists():
         print(f"Error: --repo does not exist: {repo}", file=sys.stderr)
@@ -37,10 +57,14 @@ def _llm_execute(
         print("Error: Claude Code CLI not found (expected `claude` in PATH).", file=sys.stderr)
         return 2
 
+    merged_args = list(spec.cli_args)
+    if user_extra_args:
+        merged_args.extend(user_extra_args)
+
     result = runner.run(
         prompt=rendered,
         cwd=repo,
-        extra_args=spec.cli_args,
+        extra_args=merged_args,
         output_format=output_format,
     )
 
@@ -61,6 +85,7 @@ def cmd_llm_run(args: argparse.Namespace, *, project_root: Path) -> int:
         output_format=args.output_format,
         output=args.output,
         project_root=project_root,
+        user_extra_args=_build_user_llm_args(args),
     )
 
 
@@ -73,6 +98,7 @@ def cmd_llm_analyze(args: argparse.Namespace, *, project_root: Path) -> int:
         output_format=args.output_format,
         output=args.output,
         project_root=project_root,
+        user_extra_args=_build_user_llm_args(args),
     )
 
 
@@ -86,6 +112,7 @@ def cmd_llm_profile(args: argparse.Namespace, *, project_root: Path) -> int:
         output_format=args.output_format,
         output=args.output,
         project_root=project_root,
+        user_extra_args=_build_user_llm_args(args),
     )
 
 
@@ -98,6 +125,7 @@ def cmd_llm_optimize(args: argparse.Namespace, *, project_root: Path) -> int:
         output_format=args.output_format,
         output=args.output,
         project_root=project_root,
+        user_extra_args=_build_user_llm_args(args),
     )
 
 
