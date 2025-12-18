@@ -9,6 +9,9 @@ from .history import create_history_entry, finalize_history_entry
 from .llm import ClaudeCodeRunner
 from .metrics import parse_profile_log
 from .prompts import load_prompt, resolve_prompt
+import re
+
+from .core import summarize_repo
 
 
 @dataclass(frozen=True)
@@ -72,6 +75,7 @@ def optimize_repo(
     max_steps: int,
     apply: bool,
     plan: bool,
+    yes: bool,
     project_root: Path,
 ) -> OptimizeReport:
     """
@@ -119,6 +123,18 @@ def optimize_repo(
         )
 
         if apply:
+            planned_files = compute_planned_files(repo=repo, analysis_output=analysis_output, training_script=training_script)
+            if not yes:
+                # Stop before making any edits. The caller can surface the plan and ask the user
+                # to re-run with --yes.
+                raise RuntimeError(
+                    "Refusing to apply edits without explicit confirmation.\n"
+                    "Planned files to touch:\n"
+                    + "\n".join(f"  - {p}" for p in planned_files[:50])
+                    + ("\n  - … more" if len(planned_files) > 50 else "")
+                    + "\nRe-run with --yes to proceed."
+                )
+
             hist = create_history_entry(repo=repo, command="lyra optimize --apply")
             history_run_id = hist.run_id
 
@@ -156,6 +172,51 @@ def optimize_repo(
         optimize_output=optimize_output,
         history_run_id=history_run_id,
     )
+
+
+def compute_planned_files(*, repo: Path, analysis_output: Path, training_script: Optional[str]) -> list[str]:
+    """
+    Best-effort list of files likely to be edited.
+
+    Sources:
+    - explicit training_script (if provided)
+    - detected training scripts (filename heuristic)
+    - python file paths mentioned in the analysis output
+    """
+    repo = repo.resolve()
+    planned: set[str] = set()
+
+    if training_script:
+        planned.add(training_script)
+
+    # Add likely training scripts
+    try:
+        summary = summarize_repo(repo)
+        for p in summary.training_scripts[:10]:
+            planned.add(str(p.relative_to(repo)))
+    except Exception:
+        pass
+
+    # Extract .py references from analysis output
+    try:
+        text = analysis_output.read_text(encoding="utf-8", errors="ignore")
+    except OSError:
+        text = ""
+
+    for m in re.findall(r"([A-Za-z0-9_./\\-]+\\.py)", text):
+        # normalize to repo-relative if possible
+        candidate = Path(m)
+        if candidate.is_absolute():
+            try:
+                candidate = candidate.relative_to(repo)
+            except Exception:
+                continue
+        # only include if exists in repo
+        p = (repo / candidate).resolve()
+        if p.exists():
+            planned.add(str(candidate).replace("\\", "/"))
+
+    return sorted(planned)
 
 
 def _diff_before_after(before: dict, after: dict) -> dict:

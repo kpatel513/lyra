@@ -146,7 +146,7 @@ lyra optimize /path/to/repo train.py --max-steps 100 --plan
 Apply (runs Claude prompts and may modify the repo):
 
 ```bash
-lyra optimize /path/to/repo train.py --max-steps 100 --apply
+lyra optimize /path/to/repo train.py --max-steps 100 --apply --yes
 ```
 
 Notes:
