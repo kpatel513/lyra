@@ -48,8 +48,8 @@ python -m pip install -e "$LYRA_DIR" >/dev/null
 if [ "$1" == "--dev" ]; then
     echo "🧰 Installing dev dependencies..."
     python -m pip install -e "$LYRA_DIR[dev]" >/dev/null
-fi
-
+    fi
+    
 # Claude is optional now (needed only for lyra llm)
 if command -v claude &> /dev/null; then
     echo "✅ Claude Code CLI found: $(claude --version 2>/dev/null || true)"
@@ -61,7 +61,7 @@ fi
 if [ -n "$ZSH_VERSION" ] || [ -n "$BASH_VERSION" ]; then
     if echo "$PATH" | grep -q "$LYRA_DIR/.venv/bin"; then
         echo "✅ $LYRA_DIR/.venv/bin already on PATH for this shell"
-    else
+else
         echo "📝 (Optional) Add Lyra venv to PATH by adding this to ~/.zshrc:"
         echo "   export PATH=\"\$PATH:$LYRA_DIR/.venv/bin\""
     fi
