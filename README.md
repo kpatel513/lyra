@@ -7,9 +7,31 @@ Lyra is an AI Agent that automatically analyzes and optimizes ML training code b
 ### Prerequisites
 
 - [Claude Code CLI](https://docs.anthropic.com/en/docs/claude-code/quickstart) installed and configured
-- Bash shell (macOS/Linux)
+- Python 3.9+ (recommended for the new Python CLI)
+- Bash shell (macOS/Linux) (legacy install flow)
 
 ### Install Lyra
+
+#### Python install (recommended)
+
+From the repo root:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -e .
+```
+
+Then run:
+
+```bash
+lyra --version
+lyra summarize /path/to/your/ml/repository
+lyra analyze /path/to/your/ml/repository
+lyra profile /path/to/your/ml/repository train.py --max-steps 100
+```
+
+#### Legacy install (bash PATH helper)
 
 1. **Clone or download the Lyra repository**
    ```bash

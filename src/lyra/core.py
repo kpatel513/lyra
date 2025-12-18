@@ -7,12 +7,12 @@ full agent-backed analysis module as Lyra evolves.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from pathlib import Path
-from typing import Dict, Iterable, List, Optional
 import os
 import subprocess
 from datetime import datetime
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Dict, Iterable, List, Optional
 
 
 PYTHON_EXTENSIONS = {".py", ".pyw"}
@@ -277,7 +277,7 @@ _register_patterns(
 )
 
 
-def analyze_repo(root: Path) -> AnalysisReport:
+def analyze_repo(root: Path, *, scan_all_python_files: bool = False) -> AnalysisReport:
     """
     Scan likely training scripts for common optimization and distributed patterns:
     - mixed precision & AMP
@@ -288,8 +288,8 @@ def analyze_repo(root: Path) -> AnalysisReport:
     candidates = summary.training_scripts
 
     # Fall back to scanning all python files if we didn't find any obvious
-    # training entrypoints.
-    if not candidates:
+    # training entrypoints, or if the user requested a full scan.
+    if scan_all_python_files or not candidates:
         candidates = list(_iter_python_files(summary.root))
 
     findings: List[AnalysisFinding] = []
@@ -366,6 +366,7 @@ def run_safe_profile(
     training_script: Optional[str] = None,
     max_steps: int = 100,
     log_dir: Optional[Path] = None,
+    python_executable: Optional[str] = None,
 ) -> ProfileResult:
     """
     Run the training script in a best-effort "safe profiling" mode:
@@ -387,7 +388,11 @@ def run_safe_profile(
     timestamp = datetime.utcnow().strftime("%Y%m%d-%H%M%S")
     log_file = log_dir / f"profile_{script_path.stem}_{timestamp}.log"
 
-    python_exe = os.environ.get("PYTHON", os.sys.executable)
+    python_exe = (
+        python_executable
+        or os.environ.get("PYTHON")
+        or os.sys.executable
+    )
     cmd = [python_exe, str(script_path)]
 
     # Best-effort safe mode signalling. The actual training script must

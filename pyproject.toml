@@ -1,8 +1,8 @@
-["build-system"]
+[build-system]
 requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
-["project"]
+[project]
 name = "lyra-py-agent"
 version = "0.1.0"
 description = "AI agent that analyzes and optimizes ML training code before it runs on production clusters."
@@ -20,14 +20,27 @@ classifiers = [
 ]
 dependencies = []
 
-["project.scripts"]
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0.0",
+  "ruff>=0.6.0",
+]
+
+[project.scripts]
 lyra = "lyra.cli:main"
 lyra-summarize = "lyra.cli:main_summarize"
 lyra-analyze = "lyra.cli:main_analyze"
 lyra-profile = "lyra.cli:main_profile"
 lyra-setup = "lyra.cli:main_setup"
 
-["tool.setuptools.packages.find"]
+[tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
 
 
