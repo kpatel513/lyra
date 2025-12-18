@@ -121,6 +121,24 @@ def _build_parser() -> argparse.ArgumentParser:
         default=None,
         help="Override the Python executable used to run the training script.",
     )
+    profile.add_argument(
+        "--isolated",
+        action="store_true",
+        default=True,
+        help="Run profiling in an isolated copy under .lyra/runs (default: enabled).",
+    )
+    profile.add_argument(
+        "--no-isolated",
+        action="store_false",
+        dest="isolated",
+        help="Run profiling in-place (not recommended).",
+    )
+    profile.add_argument(
+        "--runs-root",
+        type=str,
+        default=None,
+        help="Override where isolated runs are created (default: <repo>/.lyra/runs).",
+    )
 
     # lyra setup
     setup = subparsers.add_parser(
@@ -374,6 +392,8 @@ def cmd_profile(args: argparse.Namespace) -> int:
             training_script=args.training_script,
             max_steps=args.max_steps,
             python_executable=args.python_executable,
+            isolated=args.isolated,
+            runs_root=Path(args.runs_root).expanduser().resolve() if args.runs_root else None,
         )
     except (FileNotFoundError, RuntimeError) as e:
         print(f"Error: {e}", file=sys.stderr)

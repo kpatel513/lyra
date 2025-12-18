@@ -85,7 +85,7 @@ print("DISABLE_SAVING", os.environ.get("LYRA_DISABLE_SAVING"))
 """.lstrip(),
     )
 
-    result = run_safe_profile(repo, training_script="train.py", max_steps=7)
+    result = run_safe_profile(repo, training_script="train.py", max_steps=7, isolated=False)
     assert result.return_code == 0
     assert result.log_file.exists()
     text = result.log_file.read_text(encoding="utf-8")
