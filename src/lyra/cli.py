@@ -18,28 +18,22 @@ from __future__ import annotations
 import argparse
 import sys
 from pathlib import Path
+from typing import List, Optional
 
 from . import __version__
-from .commands.analyze_cmd import AnalyzeArgs, cmd_analyze
-from .commands.check_cmd import CheckArgs, cmd_check
+from .commands.analyze_cmd import cmd_analyze
+from .commands.check_cmd import cmd_check
 from .commands.llm_cmd import (
-    LlmAnalyzeArgs,
-    LlmOptimizeArgs,
-    LlmProfileArgs,
-    LlmRunArgs,
     cmd_llm_analyze,
     cmd_llm_optimize,
     cmd_llm_profile,
     cmd_llm_run,
 )
-from .commands.optimize_cmd import OptimizeArgs, cmd_optimize
-from .commands.profile_cmd import ProfileArgs, cmd_profile
-from .commands.setup_cmd import SetupArgs, cmd_setup
-from .commands.summarize_cmd import SummarizeArgs, cmd_summarize
+from .commands.optimize_cmd import cmd_optimize
+from .commands.profile_cmd import cmd_profile
+from .commands.setup_cmd import cmd_setup
+from .commands.summarize_cmd import cmd_summarize
 from .commands.undo_cmd import (
-    UndoApplyArgs,
-    UndoLastArgs,
-    UndoListArgs,
     cmd_undo_apply,
     cmd_undo_last,
     cmd_undo_list,
@@ -448,7 +442,7 @@ def _build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def main(argv: list[str] | None = None) -> int:
+def main(argv: Optional[List[str]] = None) -> int:
     """Entry point for the ``lyra`` command."""
     parser = _build_parser()
     args = parser.parse_args(argv)
@@ -456,104 +450,35 @@ def main(argv: list[str] | None = None) -> int:
     project_root = Path(__file__).resolve().parents[2]
 
     if args.command == "summarize":
-        return cmd_summarize(SummarizeArgs(args.repo_path, args.output, args.output_format))
+        return cmd_summarize(args)
     if args.command == "analyze":
-        return cmd_analyze(
-            AnalyzeArgs(args.repo_path, args.scan_all, args.engine, args.output, args.output_format)
-        )
+        return cmd_analyze(args)
     if args.command == "profile":
-        return cmd_profile(
-            ProfileArgs(
-                repo_path=args.repo_path,
-                training_script=args.training_script,
-                max_steps=args.max_steps,
-                python_executable=args.python_executable,
-                isolated=args.isolated,
-                runs_root=args.runs_root,
-                output_format=args.output_format,
-            )
-        )
+        return cmd_profile(args)
     if args.command == "setup":
-        return cmd_setup(
-            SetupArgs(
-                repo_path=args.repo_path,
-                environment_name=args.environment_name,
-                prefer=args.prefer,
-                python_executable=args.python_executable,
-                venv_dir=args.venv_dir,
-                skip_install=args.skip_install,
-                requirements=args.requirements,
-            )
-        )
+        return cmd_setup(args)
     if args.command == "check":
-        return cmd_check(CheckArgs(args.repo, args.output_format))
+        return cmd_check(args)
     if args.command == "optimize":
-        return cmd_optimize(
-            OptimizeArgs(
-                repo_path=args.repo_path,
-                training_script=args.training_script,
-                max_steps=args.max_steps,
-                apply=args.apply,
-                plan=args.plan,
-                yes=args.yes,
-                output_format=args.output_format,
-                output=args.output,
-            ),
-            project_root=project_root,
-        )
+        return cmd_optimize(args, project_root=project_root)
     if args.command == "undo":
         if args.undo_command == "list":
-            return cmd_undo_list(UndoListArgs(args.repo))
+            return cmd_undo_list(args)
         if args.undo_command == "last":
-            return cmd_undo_last(UndoLastArgs(args.repo, args.force))
+            return cmd_undo_last(args)
         if args.undo_command == "apply":
-            return cmd_undo_apply(UndoApplyArgs(args.repo, args.run_id, args.force))
+            return cmd_undo_apply(args)
         parser.error(f"Unknown undo command: {args.undo_command!r}")
         return 2
     if args.command == "llm":
         if args.llm_command == "run":
-            return cmd_llm_run(
-                LlmRunArgs(
-                    prompt=args.prompt,
-                    repo=args.repo,
-                    arguments=args.arguments,
-                    training_script=args.training_script,
-                    output_format=args.output_format,
-                    output=args.output,
-                ),
-                project_root=project_root,
-            )
+            return cmd_llm_run(args, project_root=project_root)
         if args.llm_command == "analyze":
-            return cmd_llm_analyze(
-                LlmAnalyzeArgs(
-                    repo=args.repo,
-                    profile_file=args.profile_file,
-                    output_format=args.output_format,
-                    output=args.output,
-                ),
-                project_root=project_root,
-            )
+            return cmd_llm_analyze(args, project_root=project_root)
         if args.llm_command == "profile":
-            return cmd_llm_profile(
-                LlmProfileArgs(
-                    repo=args.repo,
-                    training_script=args.training_script,
-                    arguments=args.arguments,
-                    output_format=args.output_format,
-                    output=args.output,
-                ),
-                project_root=project_root,
-            )
+            return cmd_llm_profile(args, project_root=project_root)
         if args.llm_command == "optimize":
-            return cmd_llm_optimize(
-                LlmOptimizeArgs(
-                    repo=args.repo,
-                    analysis_file=args.analysis_file,
-                    output_format=args.output_format,
-                    output=args.output,
-                ),
-                project_root=project_root,
-            )
+            return cmd_llm_optimize(args, project_root=project_root)
         parser.error(f"Unknown llm command: {args.llm_command!r}")
         return 2
 

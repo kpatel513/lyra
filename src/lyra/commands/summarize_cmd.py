@@ -1,22 +1,14 @@
 from __future__ import annotations
 
+import argparse
 import json
 import sys
-from dataclasses import dataclass
-from pathlib import Path
 
 from ..core import summarize_repo
 from .common import resolve_path, write_output_if_requested
 
 
-@dataclass(frozen=True)
-class SummarizeArgs:
-    repo_path: str
-    output: str | None
-    output_format: str
-
-
-def cmd_summarize(args: SummarizeArgs) -> int:
+def cmd_summarize(args: argparse.Namespace) -> int:
     repo = resolve_path(args.repo_path)
     if not repo.exists():
         print(f"Error: repo_path does not exist: {repo}", file=sys.stderr)

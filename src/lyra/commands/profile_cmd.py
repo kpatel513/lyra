@@ -1,27 +1,15 @@
 from __future__ import annotations
 
+import argparse
 import json
 import sys
-from dataclasses import dataclass
-from pathlib import Path
 
 from ..core import run_safe_profile
 from ..metrics import parse_profile_log
 from .common import resolve_path
 
 
-@dataclass(frozen=True)
-class ProfileArgs:
-    repo_path: str
-    training_script: str | None
-    max_steps: int
-    python_executable: str | None
-    isolated: bool
-    runs_root: str | None
-    output_format: str
-
-
-def cmd_profile(args: ProfileArgs) -> int:
+def cmd_profile(args: argparse.Namespace) -> int:
     repo = resolve_path(args.repo_path)
     if not repo.exists():
         print(f"Error: repo_path does not exist: {repo}", file=sys.stderr)

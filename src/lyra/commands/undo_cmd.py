@@ -1,33 +1,21 @@
 from __future__ import annotations
 
-import json
 import sys
-from dataclasses import dataclass
-from pathlib import Path
+import argparse
+import json
 
 from ..history import list_history, undo_history
 from .common import resolve_path
 
 
-@dataclass(frozen=True)
-class UndoListArgs:
-    repo: str
-
-
-def cmd_undo_list(args: UndoListArgs) -> int:
+def cmd_undo_list(args: argparse.Namespace) -> int:
     repo = resolve_path(args.repo)
     items = list_history(repo)
     print(json.dumps(items, indent=2, sort_keys=True))
     return 0
 
 
-@dataclass(frozen=True)
-class UndoLastArgs:
-    repo: str
-    force: bool
-
-
-def cmd_undo_last(args: UndoLastArgs) -> int:
+def cmd_undo_last(args: argparse.Namespace) -> int:
     repo = resolve_path(args.repo)
     items = list_history(repo)
     if not items:
@@ -49,14 +37,7 @@ def cmd_undo_last(args: UndoLastArgs) -> int:
     return 0
 
 
-@dataclass(frozen=True)
-class UndoApplyArgs:
-    repo: str
-    run_id: str
-    force: bool
-
-
-def cmd_undo_apply(args: UndoApplyArgs) -> int:
+def cmd_undo_apply(args: argparse.Namespace) -> int:
     repo = resolve_path(args.repo)
     try:
         summary = undo_history(repo=repo, run_id=args.run_id, force=args.force)

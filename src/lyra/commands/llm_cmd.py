@@ -1,22 +1,13 @@
 from __future__ import annotations
 
+import argparse
 import sys
-from dataclasses import dataclass
 from pathlib import Path
+from typing import Optional
 
 from ..llm import ClaudeCodeRunner
 from ..prompts import load_prompt, resolve_prompt
 from .common import resolve_path, write_output_if_requested
-
-
-@dataclass(frozen=True)
-class LlmRunArgs:
-    prompt: str
-    repo: str
-    arguments: str
-    training_script: str
-    output_format: str
-    output: str | None
 
 
 def _llm_execute(
@@ -26,7 +17,7 @@ def _llm_execute(
     arguments: str,
     training_script: str,
     output_format: str,
-    output: str | None,
+    output: Optional[str],
     project_root: Path,
 ) -> int:
     if not repo.exists():
@@ -61,7 +52,7 @@ def _llm_execute(
     return result.return_code
 
 
-def cmd_llm_run(args: LlmRunArgs, *, project_root: Path) -> int:
+def cmd_llm_run(args: argparse.Namespace, *, project_root: Path) -> int:
     return _llm_execute(
         repo=resolve_path(args.repo),
         prompt=args.prompt,
@@ -73,15 +64,7 @@ def cmd_llm_run(args: LlmRunArgs, *, project_root: Path) -> int:
     )
 
 
-@dataclass(frozen=True)
-class LlmAnalyzeArgs:
-    repo: str
-    profile_file: str
-    output_format: str
-    output: str | None
-
-
-def cmd_llm_analyze(args: LlmAnalyzeArgs, *, project_root: Path) -> int:
+def cmd_llm_analyze(args: argparse.Namespace, *, project_root: Path) -> int:
     return _llm_execute(
         repo=resolve_path(args.repo),
         prompt="lyraAnalyze",
@@ -93,16 +76,7 @@ def cmd_llm_analyze(args: LlmAnalyzeArgs, *, project_root: Path) -> int:
     )
 
 
-@dataclass(frozen=True)
-class LlmProfileArgs:
-    repo: str
-    training_script: str
-    arguments: str
-    output_format: str
-    output: str | None
-
-
-def cmd_llm_profile(args: LlmProfileArgs, *, project_root: Path) -> int:
+def cmd_llm_profile(args: argparse.Namespace, *, project_root: Path) -> int:
     arguments = args.arguments or args.training_script
     return _llm_execute(
         repo=resolve_path(args.repo),
@@ -115,15 +89,7 @@ def cmd_llm_profile(args: LlmProfileArgs, *, project_root: Path) -> int:
     )
 
 
-@dataclass(frozen=True)
-class LlmOptimizeArgs:
-    repo: str
-    analysis_file: str
-    output_format: str
-    output: str | None
-
-
-def cmd_llm_optimize(args: LlmOptimizeArgs, *, project_root: Path) -> int:
+def cmd_llm_optimize(args: argparse.Namespace, *, project_root: Path) -> int:
     return _llm_execute(
         repo=resolve_path(args.repo),
         prompt="lyraOptimize",

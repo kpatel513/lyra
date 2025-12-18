@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Optional
 
 
 def resolve_path(raw: str) -> Path:
     return Path(raw).expanduser().resolve()
 
 
-def write_output_if_requested(text: str, output: str | None) -> None:
+def write_output_if_requested(text: str, output: Optional[str]) -> None:
     if not output:
         return
     out_path = Path(output).expanduser().resolve()

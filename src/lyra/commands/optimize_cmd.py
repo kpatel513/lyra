@@ -1,27 +1,15 @@
 from __future__ import annotations
 
+import argparse
 import json
 import sys
-from dataclasses import dataclass
 from pathlib import Path
 
 from ..optimize import optimize_repo
 from .common import resolve_path, write_output_if_requested
 
 
-@dataclass(frozen=True)
-class OptimizeArgs:
-    repo_path: str
-    training_script: str | None
-    max_steps: int
-    apply: bool
-    plan: bool
-    yes: bool
-    output_format: str
-    output: str | None
-
-
-def cmd_optimize(args: OptimizeArgs, *, project_root: Path) -> int:
+def cmd_optimize(args: argparse.Namespace, *, project_root: Path) -> int:
     repo = resolve_path(args.repo_path)
     if not repo.exists():
         print(f"Error: repo_path does not exist: {repo}", file=sys.stderr)

@@ -1,25 +1,13 @@
 from __future__ import annotations
 
+import argparse
 import sys
-from dataclasses import dataclass
-from pathlib import Path
 
 from ..setup_env import detect_repo_deps, setup_conda, setup_venv
 from .common import resolve_path
 
 
-@dataclass(frozen=True)
-class SetupArgs:
-    repo_path: str
-    environment_name: str | None
-    prefer: str
-    python_executable: str | None
-    venv_dir: str | None
-    skip_install: bool
-    requirements: str | None
-
-
-def cmd_setup(args: SetupArgs) -> int:
+def cmd_setup(args: argparse.Namespace) -> int:
     repo = resolve_path(args.repo_path)
     if not repo.exists():
         print(f"Error: repo_path does not exist: {repo}", file=sys.stderr)

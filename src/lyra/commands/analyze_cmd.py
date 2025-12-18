@@ -1,23 +1,14 @@
 from __future__ import annotations
 
+import argparse
 import json
 import sys
-from dataclasses import dataclass
 
 from ..core import analyze_repo
 from .common import resolve_path, write_output_if_requested
 
 
-@dataclass(frozen=True)
-class AnalyzeArgs:
-    repo_path: str
-    scan_all: bool
-    engine: str
-    output: str | None
-    output_format: str
-
-
-def cmd_analyze(args: AnalyzeArgs) -> int:
+def cmd_analyze(args: argparse.Namespace) -> int:
     repo = resolve_path(args.repo_path)
     if not repo.exists():
         print(f"Error: repo_path does not exist: {repo}", file=sys.stderr)

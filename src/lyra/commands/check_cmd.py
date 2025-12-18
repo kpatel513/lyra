@@ -1,20 +1,13 @@
 from __future__ import annotations
 
+import argparse
 import json
-from dataclasses import dataclass
-from pathlib import Path
 
 from ..check import run_check
 from .common import resolve_path
 
 
-@dataclass(frozen=True)
-class CheckArgs:
-    repo: str | None
-    output_format: str
-
-
-def cmd_check(args: CheckArgs) -> int:
+def cmd_check(args: argparse.Namespace) -> int:
     repo_path = resolve_path(args.repo) if args.repo else None
     report = run_check(repo=repo_path)
     if args.output_format == "json":
