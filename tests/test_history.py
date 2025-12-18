@@ -20,8 +20,9 @@ def test_history_undo_restores_modified_file(tmp_path: Path) -> None:
     finalize_history_entry(entry)
 
     # Undo should restore backed-up version
-    undo_history(repo=repo, run_id=entry.run_id, force=True)
+    summary = undo_history(repo=repo, run_id=entry.run_id, force=True)
     assert f.read_text(encoding="utf-8") == "a=1\n"
+    assert "train.py" in summary["restored"]
 
 
 def test_history_undo_refuses_when_diverged_without_force(tmp_path: Path) -> None:

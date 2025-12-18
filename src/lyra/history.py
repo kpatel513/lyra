@@ -228,7 +228,7 @@ def undo_history(
     repo: Path,
     run_id: str,
     force: bool = False,
-) -> None:
+) -> dict:
     """
     Restore backed-up files for a given run_id and remove added files.
 
@@ -269,12 +269,17 @@ def undo_history(
             + "\nRe-run with --force to overwrite."
         )
 
+    removed: list[str] = []
+    restored: list[str] = []
+    skipped_no_backup: list[str] = []
+
     # Remove added files
     for rel in changes["added"]:
         p = repo / rel
         if p.exists():
             try:
                 p.unlink()
+                removed.append(rel)
             except OSError:
                 pass
 
@@ -284,8 +289,17 @@ def undo_history(
         dst = repo / rel
         if not src.exists():
             # Can't restore what we didn't back up.
+            skipped_no_backup.append(rel)
             continue
         dst.parent.mkdir(parents=True, exist_ok=True)
         dst.write_bytes(src.read_bytes())
+        restored.append(rel)
+
+    return {
+        "run_id": run_id,
+        "removed": removed,
+        "restored": restored,
+        "skipped_no_backup": skipped_no_backup,
+    }
 
 

@@ -23,6 +23,7 @@ def test_optimize_repo_dry_run_profiles_only(tmp_path: Path) -> None:
             max_steps=3,
             apply=False,
             plan=False,
+            yes=False,
             project_root=tmp_path,
         )
 
@@ -62,6 +63,7 @@ def test_optimize_repo_plan_runs_analysis_only(tmp_path: Path, monkeypatch) -> N
             max_steps=3,
             apply=False,
             plan=True,
+            yes=False,
             project_root=tmp_path,
         )
 

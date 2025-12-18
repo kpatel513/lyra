@@ -389,6 +389,11 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Actually run Claude analyze+optimize prompts (may modify repo). Default is dry-run (profile only).",
     )
     optimize.add_argument(
+        "--yes",
+        action="store_true",
+        help="Acknowledge and proceed with applying edits when using --apply.",
+    )
+    optimize.add_argument(
         "--plan",
         action="store_true",
         help="Run profile + Claude analysis only (no code changes, no re-profile).",
@@ -672,6 +677,7 @@ def cmd_optimize(args: argparse.Namespace) -> int:
             max_steps=args.max_steps,
             apply=args.apply,
             plan=args.plan,
+            yes=args.yes,
             project_root=project_root,
         )
     except RuntimeError as e:
@@ -748,19 +754,25 @@ def main(argv: list[str] | None = None) -> int:
                 print("History metadata missing run_id.", file=sys.stderr)
                 return 2
             try:
-                undo_history(repo=repo, run_id=run_id, force=args.force)
+                summary = undo_history(repo=repo, run_id=run_id, force=args.force)
             except RuntimeError as e:
                 print(f"Error: {e}", file=sys.stderr)
                 return 2
             print(f"Reverted snapshot: {run_id}")
+            print(
+                f"Restored: {len(summary['restored'])} | Removed: {len(summary['removed'])} | Skipped (no backup): {len(summary['skipped_no_backup'])}"
+            )
             return 0
         if args.undo_command == "apply":
             try:
-                undo_history(repo=repo, run_id=args.run_id, force=args.force)
+                summary = undo_history(repo=repo, run_id=args.run_id, force=args.force)
             except RuntimeError as e:
                 print(f"Error: {e}", file=sys.stderr)
                 return 2
             print(f"Reverted snapshot: {args.run_id}")
+            print(
+                f"Restored: {len(summary['restored'])} | Removed: {len(summary['removed'])} | Skipped (no backup): {len(summary['skipped_no_backup'])}"
+            )
             return 0
         parser.error(f"Unknown undo command: {args.undo_command!r}")
         return 2
