@@ -80,6 +80,12 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Scan all Python files, not only likely training entrypoints.",
     )
     analyze.add_argument(
+        "--engine",
+        choices=["ast", "string"],
+        default="ast",
+        help="Analysis engine: AST-based (lower false positives) or legacy string scan.",
+    )
+    analyze.add_argument(
         "--output",
         type=str,
         default=None,
@@ -161,7 +167,7 @@ def cmd_analyze(args: argparse.Namespace) -> int:
         print(f"Error: repo_path does not exist: {repo}", file=sys.stderr)
         return 2
 
-    report = analyze_repo(repo, scan_all_python_files=args.scan_all)
+    report = analyze_repo(repo, scan_all_python_files=args.scan_all, engine=args.engine)
     text = report.format_human()
     print(text)
     _write_output_if_requested(text, args.output)

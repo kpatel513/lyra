@@ -43,7 +43,7 @@ model = DistributedDataParallel(torch.nn.Linear(1, 1))
 """.lstrip(),
     )
 
-    report = analyze_repo(repo)
+    report = analyze_repo(repo, engine="ast")
     kinds = {f.kind for f in report.findings}
     assert "mixed_precision_grad_scaler" in kinds
     assert "mixed_precision_autocast" in kinds
@@ -59,8 +59,17 @@ def test_analyze_repo_scan_all(tmp_path: Path) -> None:
         repo / "entrypoint.py",
         "from torch.nn.parallel import DistributedDataParallel\n",
     )
-    report = analyze_repo(repo, scan_all_python_files=True)
+    report = analyze_repo(repo, scan_all_python_files=True, engine="ast")
     assert any(f.kind == "ddp_torch" for f in report.findings)
+
+
+def test_analyze_repo_engine_string(tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    repo.mkdir()
+
+    _write(repo / "train.py", "with torch.cuda.amp.autocast():\n    pass\n")
+    report = analyze_repo(repo, engine="string")
+    assert any(f.engine == "string" for f in report.findings)
 
 
 def test_run_safe_profile_writes_log_and_returns_code(tmp_path: Path) -> None:
