@@ -21,6 +21,7 @@ from pathlib import Path
 
 from . import __version__
 from .core import analyze_repo, run_safe_profile, summarize_repo
+from .check import run_check
 from .llm import ClaudeCodeRunner
 from .prompts import load_prompt, resolve_prompt
 
@@ -132,6 +133,20 @@ def _build_parser() -> argparse.ArgumentParser:
         nargs="?",
         help="Optional name for the environment. If omitted, Lyra will generate one.",
     )
+
+    # lyra check
+    check = subparsers.add_parser(
+        "check",
+        help="Check Lyra prerequisites (Python/Claude) and optional repo write access.",
+    )
+    check.add_argument(
+        "--repo",
+        type=str,
+        default=None,
+        help="Optional repo/workspace path to validate write access for .lyra/ outputs.",
+    )
+
+    # NOTE: intentionally no legacy alias.
 
     # lyra llm
     llm = subparsers.add_parser(
@@ -445,6 +460,13 @@ def cmd_setup(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_check(args: argparse.Namespace) -> int:
+    repo = _resolve_repo_path(args.repo) if args.repo else None
+    report = run_check(repo=repo)
+    print(report.format_human())
+    return 0 if report.ok else 2
+
+
 def main(argv: list[str] | None = None) -> int:
     """Entry point for the ``lyra`` command."""
     parser = _build_parser()
@@ -458,6 +480,8 @@ def main(argv: list[str] | None = None) -> int:
         return cmd_profile(args)
     if args.command == "setup":
         return cmd_setup(args)
+    if args.command == "check":
+        return cmd_check(args)
     if args.command == "llm":
         if args.llm_command == "run":
             return cmd_llm_run(args)

@@ -113,6 +113,13 @@ CI runs `ruff` and `pytest` on pull requests via GitHub Actions.
 
 ## Troubleshooting
 
+### Run check first
+
+```bash
+lyra check
+lyra check --repo /path/to/workspace
+```
+
 ### `claude` not found
 
 - Install Claude Code CLI and authenticate.
