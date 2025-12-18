@@ -152,6 +152,7 @@ lyra optimize /path/to/repo train.py --max-steps 100 --apply
 Notes:
 - In `--apply` mode, optimize writes prompt outputs under `.lyra/optimize/` and emits a **before/after diff** (duration + parsed metrics).
 - Use `--output-format json` for machine-readable reports.
+- In `--apply` mode, Lyra also records an **undo snapshot** under `.lyra/history/<run-id>/`.
 
 ### `lyra llm` (Claude Code CLI integration)
 
@@ -193,6 +194,28 @@ Conda (if `environment.yml` exists and `conda` is available):
 ```bash
 lyra setup /path/to/repo --prefer conda --skip-install
 ```
+
+### `lyra undo`
+
+Revert changes made by `lyra optimize --apply` using snapshots stored under `.lyra/history/`.
+
+```bash
+# list snapshots (JSON)
+lyra undo list --repo /path/to/repo
+
+# undo most recent snapshot
+lyra undo last --repo /path/to/repo
+
+# undo a specific run-id
+lyra undo apply --repo /path/to/repo <run-id>
+
+# overwrite even if files changed since the run
+lyra undo last --repo /path/to/repo --force
+```
+
+Limitations:
+- Undo can only restore files that were backed up (by default: common code/text extensions).
+- By default, undo refuses to overwrite files that have changed since the snapshot; use `--force` to override.
 
 ## JSON output
 
