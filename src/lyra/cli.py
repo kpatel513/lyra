@@ -140,6 +140,99 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     llm_sub = llm.add_subparsers(dest="llm_command", metavar="<llm_command>", required=True)
 
+    llm_analyze = llm_sub.add_parser(
+        "analyze",
+        help="Convenience wrapper for commands/lyraAnalyze.md (analyze a profiler report).",
+    )
+    llm_analyze.add_argument(
+        "--repo",
+        type=str,
+        required=True,
+        help="Repository/workspace to run Claude Code in (sets cwd so tools can access the repo).",
+    )
+    llm_analyze.add_argument(
+        "--profile-file",
+        type=str,
+        required=True,
+        help="Path to the profiling report file (substituted into $ARGUMENTS).",
+    )
+    llm_analyze.add_argument(
+        "--output-format",
+        choices=["text", "json", "stream-json"],
+        default="text",
+        help="Claude output format (passed to --output-format).",
+    )
+    llm_analyze.add_argument(
+        "--output",
+        type=str,
+        default=None,
+        help="Optional path to write Claude output to.",
+    )
+
+    llm_profile = llm_sub.add_parser(
+        "profile",
+        help="Convenience wrapper for commands/lyraProfile.md (patch training script for profiling).",
+    )
+    llm_profile.add_argument(
+        "--repo",
+        type=str,
+        required=True,
+        help="Repository/workspace to run Claude Code in (sets cwd so tools can access the repo).",
+    )
+    llm_profile.add_argument(
+        "--training-script",
+        type=str,
+        required=True,
+        help="Training script path (substituted into $TRAINING_SCRIPT and, if needed, $ARGUMENTS).",
+    )
+    llm_profile.add_argument(
+        "--arguments",
+        type=str,
+        default="",
+        help="Optional value substituted for $ARGUMENTS. If omitted, defaults to --training-script.",
+    )
+    llm_profile.add_argument(
+        "--output-format",
+        choices=["text", "json", "stream-json"],
+        default="text",
+        help="Claude output format (passed to --output-format).",
+    )
+    llm_profile.add_argument(
+        "--output",
+        type=str,
+        default=None,
+        help="Optional path to write Claude output to.",
+    )
+
+    llm_optimize = llm_sub.add_parser(
+        "optimize",
+        help="Convenience wrapper for commands/lyraOptimize.md (apply suggestions from an analysis doc).",
+    )
+    llm_optimize.add_argument(
+        "--repo",
+        type=str,
+        required=True,
+        help="Repository/workspace to run Claude Code in (sets cwd so tools can access the repo).",
+    )
+    llm_optimize.add_argument(
+        "--analysis-file",
+        type=str,
+        required=True,
+        help="Path to the analysis document (substituted into $ARGUMENTS).",
+    )
+    llm_optimize.add_argument(
+        "--output-format",
+        choices=["text", "json", "stream-json"],
+        default="text",
+        help="Claude output format (passed to --output-format).",
+    )
+    llm_optimize.add_argument(
+        "--output",
+        type=str,
+        default=None,
+        help="Optional path to write Claude output to.",
+    )
+
     llm_run = llm_sub.add_parser(
         "run",
         help="Run a prompt by name (from commands/) or by path.",
@@ -244,15 +337,22 @@ def cmd_profile(args: argparse.Namespace) -> int:
     return result.return_code
 
 
-def cmd_llm_run(args: argparse.Namespace) -> int:
-    repo = _resolve_repo_path(args.repo)
+def _llm_execute(
+    *,
+    repo: Path,
+    prompt: str,
+    arguments: str,
+    training_script: str,
+    output_format: str,
+    output: str | None,
+) -> int:
     if not repo.exists():
         print(f"Error: --repo does not exist: {repo}", file=sys.stderr)
         return 2
 
     # Resolve and render prompt
     project_root = Path(__file__).resolve().parents[2]
-    prompt_path = resolve_prompt(project_root, args.prompt)
+    prompt_path = resolve_prompt(project_root, prompt)
     if not prompt_path.exists():
         print(f"Error: prompt not found: {prompt_path}", file=sys.stderr)
         return 2
@@ -260,8 +360,8 @@ def cmd_llm_run(args: argparse.Namespace) -> int:
     spec = load_prompt(prompt_path)
     rendered = spec.render(
         {
-            "ARGUMENTS": args.arguments,
-            "TRAINING_SCRIPT": args.training_script,
+            "ARGUMENTS": arguments,
+            "TRAINING_SCRIPT": training_script,
         }
     ).strip()
 
@@ -274,7 +374,7 @@ def cmd_llm_run(args: argparse.Namespace) -> int:
         prompt=rendered,
         cwd=repo,
         extra_args=spec.cli_args,
-        output_format=args.output_format,
+        output_format=output_format,
     )
 
     # Surface stderr if any (Claude sometimes uses stderr for warnings)
@@ -282,8 +382,53 @@ def cmd_llm_run(args: argparse.Namespace) -> int:
         print(result.stderr, file=sys.stderr)
 
     print(result.stdout)
-    _write_output_if_requested(result.stdout, args.output)
+    _write_output_if_requested(result.stdout, output)
     return result.return_code
+
+
+def cmd_llm_run(args: argparse.Namespace) -> int:
+    return _llm_execute(
+        repo=_resolve_repo_path(args.repo),
+        prompt=args.prompt,
+        arguments=args.arguments,
+        training_script=args.training_script,
+        output_format=args.output_format,
+        output=args.output,
+    )
+
+
+def cmd_llm_analyze(args: argparse.Namespace) -> int:
+    return _llm_execute(
+        repo=_resolve_repo_path(args.repo),
+        prompt="lyraAnalyze",
+        arguments=args.profile_file,
+        training_script="",
+        output_format=args.output_format,
+        output=args.output,
+    )
+
+
+def cmd_llm_profile(args: argparse.Namespace) -> int:
+    arguments = args.arguments or args.training_script
+    return _llm_execute(
+        repo=_resolve_repo_path(args.repo),
+        prompt="lyraProfile",
+        arguments=arguments,
+        training_script=args.training_script,
+        output_format=args.output_format,
+        output=args.output,
+    )
+
+
+def cmd_llm_optimize(args: argparse.Namespace) -> int:
+    return _llm_execute(
+        repo=_resolve_repo_path(args.repo),
+        prompt="lyraOptimize",
+        arguments=args.analysis_file,
+        training_script="",
+        output_format=args.output_format,
+        output=args.output,
+    )
 
 
 def cmd_setup(args: argparse.Namespace) -> int:
@@ -316,6 +461,12 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "llm":
         if args.llm_command == "run":
             return cmd_llm_run(args)
+        if args.llm_command == "analyze":
+            return cmd_llm_analyze(args)
+        if args.llm_command == "profile":
+            return cmd_llm_profile(args)
+        if args.llm_command == "optimize":
+            return cmd_llm_optimize(args)
         parser.error(f"Unknown llm command: {args.llm_command!r}")
         return 2
 

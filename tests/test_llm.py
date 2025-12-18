@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from unittest.mock import patch
 
-from lyra.llm import ClaudeCodeRunner
+from lyra.llm import ClaudeCodeRunner, LlmResult
 from lyra.prompts import load_prompt
 
 
@@ -43,5 +43,59 @@ def test_claude_runner_builds_noninteractive_command() -> None:
         assert res.command[:4] == ["claude", "-p", "--output-format", "json"]
         assert "--dangerously-skip-permissions" in res.command
         assert res.command[-1] == "hello"
+
+
+def test_cli_llm_wrapper_analyze_maps_profile_file(tmp_path: Path, monkeypatch) -> None:
+    """
+    Verify `lyra llm analyze` maps --profile-file -> $ARGUMENTS and selects lyraAnalyze.md.
+    """
+    # Build a fake repo root with commands/lyraAnalyze.md
+    repo_root = tmp_path / "lyra_repo"
+    (repo_root / "commands").mkdir(parents=True)
+    (repo_root / "commands" / "lyraAnalyze.md").write_text(
+        "args: --dangerously-skip-permissions\nAnalyze $ARGUMENTS\n",
+        encoding="utf-8",
+    )
+
+    # Patch lyra.cli to think it's located under this repo_root/src/lyra/cli.py
+    src_dir = repo_root / "src" / "lyra"
+    src_dir.mkdir(parents=True)
+    fake_cli_path = src_dir / "cli.py"
+    fake_cli_path.write_text("# placeholder\n", encoding="utf-8")
+
+    import lyra.cli as cli
+
+    monkeypatch.setattr(cli, "__file__", str(fake_cli_path))
+
+    captured = {}
+
+    class FakeRunner:
+        def is_available(self) -> bool:
+            return True
+
+        def run(self, *, prompt, cwd, extra_args, output_format):
+            captured["prompt"] = prompt
+            captured["cwd"] = cwd
+            captured["extra_args"] = extra_args
+            captured["output_format"] = output_format
+            return LlmResult(command=["claude"], stdout="ok", stderr="", return_code=0)
+
+    monkeypatch.setattr(cli, "ClaudeCodeRunner", FakeRunner)
+
+    args = type(
+        "Args",
+        (),
+        {
+            "repo": str(tmp_path),
+            "profile_file": "prof.txt",
+            "output_format": "text",
+            "output": None,
+        },
+    )()
+
+    rc = cli.cmd_llm_analyze(args)
+    assert rc == 0
+    assert "Analyze prof.txt" in captured["prompt"]
+    assert captured["extra_args"] == ["--dangerously-skip-permissions"]
 
 
