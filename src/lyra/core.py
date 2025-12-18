@@ -17,6 +17,7 @@ import ast
 
 from .safe_profile import prepare_isolated_run
 
+import time
 
 PYTHON_EXTENSIONS = {".py", ".pyw"}
 
@@ -45,6 +46,14 @@ class RepoSummary:
             "🎯 Potential training entrypoints:\n"
             f"{training_list}"
         )
+
+    def to_dict(self) -> dict:
+        return {
+            "root": str(self.root),
+            "python_files": self.python_files,
+            "total_lines": self.total_lines,
+            "training_scripts": [str(p) for p in self.training_scripts],
+        }
 
 
 def _iter_python_files(root: Path) -> Iterable[Path]:
@@ -97,6 +106,15 @@ class AnalysisFinding:
     line_number: int
     code_line: str
     engine: str = "string"
+
+    def to_dict(self) -> dict:
+        return {
+            "kind": self.kind,
+            "file": str(self.file),
+            "line_number": self.line_number,
+            "code_line": self.code_line,
+            "engine": self.engine,
+        }
 
 
 @dataclass
@@ -197,6 +215,14 @@ class AnalysisReport:
                 lines.append("  - … more")
 
         return "\n".join(lines) + "\n"
+
+    def to_dict(self) -> dict:
+        return {
+            "root": str(self.root),
+            "training_scripts": [str(p) for p in self.training_scripts],
+            "findings": [f.to_dict() for f in self.findings],
+            "parse_errors": [str(p) for p in self.parse_errors],
+        }
 
 
 _PATTERN_KINDS: Dict[str, str] = {}
@@ -540,6 +566,9 @@ class ProfileResult:
     log_file: Path
     return_code: int
     run_dir: Optional[Path] = None
+    started_at_unix: Optional[float] = None
+    ended_at_unix: Optional[float] = None
+    duration_s: Optional[float] = None
 
     def format_human(self) -> str:
         status = "✅ Completed" if self.return_code == 0 else f"⚠️ Exit code {self.return_code}"
@@ -552,6 +581,19 @@ class ProfileResult:
             f"📝 Log file: {self.log_file}\n"
             f"🚀 Status: {status}\n"
         )
+
+    def to_dict(self) -> dict:
+        return {
+            "root": str(self.root),
+            "script": str(self.script),
+            "command": list(self.command),
+            "log_file": str(self.log_file),
+            "return_code": self.return_code,
+            "run_dir": str(self.run_dir) if self.run_dir else None,
+            "started_at_unix": self.started_at_unix,
+            "ended_at_unix": self.ended_at_unix,
+            "duration_s": self.duration_s,
+        }
 
 
 def _select_training_script(root: Path, explicit: Optional[str]) -> Path:
@@ -628,6 +670,7 @@ def run_safe_profile(
     env.setdefault("LYRA_MAX_STEPS", str(max_steps))
     env.setdefault("LYRA_DISABLE_SAVING", "1")
 
+    started = time.time()
     with log_file.open("w", encoding="utf-8") as fh:
         process = subprocess.run(
             cmd,
@@ -637,6 +680,7 @@ def run_safe_profile(
             stderr=subprocess.STDOUT,
             text=True,
         )
+    ended = time.time()
 
     return ProfileResult(
         root=root,
@@ -645,5 +689,8 @@ def run_safe_profile(
         log_file=log_file,
         return_code=process.returncode,
         run_dir=run_dir,
+        started_at_unix=started,
+        ended_at_unix=ended,
+        duration_s=(ended - started),
     )
 

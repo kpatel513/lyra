@@ -16,6 +16,7 @@ points without changing the public CLI surface.
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from pathlib import Path
 
@@ -23,6 +24,8 @@ from . import __version__
 from .core import analyze_repo, run_safe_profile, summarize_repo
 from .check import run_check
 from .llm import ClaudeCodeRunner
+from .metrics import parse_profile_log
+from .optimize import optimize_repo
 from .prompts import load_prompt, resolve_prompt
 from .setup_env import detect_repo_deps, setup_conda, setup_venv
 
@@ -71,6 +74,12 @@ def _build_parser() -> argparse.ArgumentParser:
         default=None,
         help="Optional path to write the report text to.",
     )
+    summarize.add_argument(
+        "--output-format",
+        choices=["text", "json"],
+        default="text",
+        help="Output format for stdout (default: text).",
+    )
 
     # lyra analyze
     analyze = subparsers.add_parser(
@@ -94,6 +103,12 @@ def _build_parser() -> argparse.ArgumentParser:
         type=str,
         default=None,
         help="Optional path to write the report text to.",
+    )
+    analyze.add_argument(
+        "--output-format",
+        choices=["text", "json"],
+        default="text",
+        help="Output format for stdout (default: text).",
     )
 
     # lyra profile
@@ -138,6 +153,12 @@ def _build_parser() -> argparse.ArgumentParser:
         type=str,
         default=None,
         help="Override where isolated runs are created (default: <repo>/.lyra/runs).",
+    )
+    profile.add_argument(
+        "--output-format",
+        choices=["text", "json"],
+        default="text",
+        help="Output format for stdout (default: text).",
     )
 
     # lyra setup
@@ -193,6 +214,12 @@ def _build_parser() -> argparse.ArgumentParser:
         type=str,
         default=None,
         help="Optional repo/workspace path to validate write access for .lyra/ outputs.",
+    )
+    check.add_argument(
+        "--output-format",
+        choices=["text", "json"],
+        default="text",
+        help="Output format for stdout (default: text).",
     )
 
     # NOTE: intentionally no legacy alias.
@@ -337,6 +364,42 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Optional path to write Claude output to.",
     )
 
+    # lyra optimize
+    optimize = subparsers.add_parser(
+        "optimize",
+        help="Orchestrate: profile -> (optional LLM) optimize -> re-profile.",
+    )
+    _add_common_repo_argument(optimize)
+    optimize.add_argument(
+        "training_script",
+        type=str,
+        nargs="?",
+        help="Optional training script to run (default: auto-detect).",
+    )
+    optimize.add_argument(
+        "--max-steps",
+        type=int,
+        default=100,
+        help="Max optimizer steps for each profile run (default: 100).",
+    )
+    optimize.add_argument(
+        "--apply",
+        action="store_true",
+        help="Actually run Claude analyze+optimize prompts (may modify repo). Default is dry-run (profile only).",
+    )
+    optimize.add_argument(
+        "--output-format",
+        choices=["text", "json"],
+        default="text",
+        help="Output format for stdout (default: text).",
+    )
+    optimize.add_argument(
+        "--output",
+        type=str,
+        default=None,
+        help="Optional path to write the report output to.",
+    )
+
     return parser
 
 
@@ -361,9 +424,15 @@ def cmd_summarize(args: argparse.Namespace) -> int:
         return 2
 
     summary = summarize_repo(repo)
-    text = summary.format_human()
-    print(text)
-    _write_output_if_requested(text, args.output)
+    if args.output_format == "json":
+        payload = summary.to_dict()
+        text = json.dumps(payload, indent=2, sort_keys=True)
+        print(text)
+        _write_output_if_requested(text + "\n", args.output)
+    else:
+        text = summary.format_human()
+        print(text)
+        _write_output_if_requested(text, args.output)
     return 0
 
 
@@ -374,9 +443,15 @@ def cmd_analyze(args: argparse.Namespace) -> int:
         return 2
 
     report = analyze_repo(repo, scan_all_python_files=args.scan_all, engine=args.engine)
-    text = report.format_human()
-    print(text)
-    _write_output_if_requested(text, args.output)
+    if args.output_format == "json":
+        payload = report.to_dict()
+        text = json.dumps(payload, indent=2, sort_keys=True)
+        print(text)
+        _write_output_if_requested(text + "\n", args.output)
+    else:
+        text = report.format_human()
+        print(text)
+        _write_output_if_requested(text, args.output)
     return 0
 
 
@@ -399,7 +474,12 @@ def cmd_profile(args: argparse.Namespace) -> int:
         print(f"Error: {e}", file=sys.stderr)
         return 2
 
-    print(result.format_human())
+    if args.output_format == "json":
+        metrics = parse_profile_log(result.log_file).to_dict()
+        payload = {"profile": result.to_dict(), "metrics": metrics}
+        print(json.dumps(payload, indent=2, sort_keys=True))
+    else:
+        print(result.format_human())
     return result.return_code
 
 
@@ -542,8 +622,58 @@ def cmd_setup(args: argparse.Namespace) -> int:
 def cmd_check(args: argparse.Namespace) -> int:
     repo = _resolve_repo_path(args.repo) if args.repo else None
     report = run_check(repo=repo)
-    print(report.format_human())
+    if args.output_format == "json":
+        payload = {
+            "ok": report.ok,
+            "items": [i.__dict__ for i in report.items],
+        }
+        print(json.dumps(payload, indent=2, sort_keys=True))
+    else:
+        print(report.format_human())
     return 0 if report.ok else 2
+
+
+def cmd_optimize(args: argparse.Namespace) -> int:
+    repo = _resolve_repo_path(args.repo_path)
+    if not repo.exists():
+        print(f"Error: repo_path does not exist: {repo}", file=sys.stderr)
+        return 2
+
+    project_root = Path(__file__).resolve().parents[2]
+    try:
+        report = optimize_repo(
+            repo=repo,
+            training_script=args.training_script,
+            max_steps=args.max_steps,
+            apply=args.apply,
+            project_root=project_root,
+        )
+    except RuntimeError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return 2
+
+    if args.output_format == "json":
+        text = json.dumps(report.to_dict(), indent=2, sort_keys=True)
+        print(text)
+        _write_output_if_requested(text + "\n", args.output)
+    else:
+        lines = [
+            "Lyra optimize",
+            f"- repo: {report.repo}",
+            f"- applied: {report.applied}",
+            f"- before log: {report.before['profile']['log_file']}",
+        ]
+        if report.after:
+            lines.append(f"- after log: {report.after['profile']['log_file']}")
+        if report.analysis_output:
+            lines.append(f"- analysis output: {report.analysis_output}")
+        if report.optimize_output:
+            lines.append(f"- optimize output: {report.optimize_output}")
+        text = "\n".join(lines) + "\n"
+        print(text)
+        _write_output_if_requested(text, args.output)
+
+    return 0
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -561,6 +691,8 @@ def main(argv: list[str] | None = None) -> int:
         return cmd_setup(args)
     if args.command == "check":
         return cmd_check(args)
+    if args.command == "optimize":
+        return cmd_optimize(args)
     if args.command == "llm":
         if args.llm_command == "run":
             return cmd_llm_run(args)
