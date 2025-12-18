@@ -8,6 +8,7 @@ version = "0.1.0"
 description = "AI agent that analyzes and optimizes ML training code before it runs on production clusters."
 readme = "README.md"
 requires-python = ">=3.9"
+license = { text = "MIT" }
 authors = [
   { name = "Lyra", email = "devnull@example.com" },
 ]
