@@ -213,6 +213,11 @@ def _build_parser() -> argparse.ArgumentParser:
         default=None,
         help="Explicit requirements file to install (default: <repo>/requirements.txt if present).",
     )
+    setup.add_argument(
+        "--verify",
+        action="store_true",
+        help="After setup, run best-effort import checks (torch/numpy) inside the created environment.",
+    )
 
     # lyra check
     check = subparsers.add_parser(

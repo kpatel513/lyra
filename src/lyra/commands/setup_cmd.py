@@ -43,6 +43,7 @@ def cmd_setup(args: argparse.Namespace) -> int:
         python_executable=python_exe,
         install=not args.skip_install,
         requirements_file=requirements_file,
+        verify=getattr(args, "verify", False),
     )
     print(result.format_human(), end="")
     return 0 if result.env_path else 2

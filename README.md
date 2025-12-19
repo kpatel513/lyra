@@ -183,6 +183,21 @@ lyra llm run lyraAnalyze --repo /path/to/workspace --arguments /path/to/profile.
 
 Creates an environment for running/profiling a training repo.
 
+### Dependencies for target repos
+
+Lyra can create a venv for a *target training repo* and (optionally) install dependencies:
+
+- If the target repo has **`requirements.txt`**, Lyra installs it with `pip install -r requirements.txt`.
+- If the target repo has **`pyproject.toml`** (and no `requirements.txt`), Lyra attempts `pip install -e <repo>` (editable install).
+
+Recommended flow:
+
+```bash
+lyra setup /path/to/target-repo --verify
+source /path/to/target-repo/.venv/bin/activate
+lyra check --repo /path/to/target-repo
+```
+
 Venv (default):
 
 ```bash
